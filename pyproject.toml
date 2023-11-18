@@ -1,0 +1,24 @@
+[project]
+name = "aoc2023"
+version = "0.0.0"
+authors = [{ name="Tyler Smart", email="tjsmart@ucsc.edu" }]
+description = "Advent of Code 2023 solutions"
+requires-python = ">=3.12"
+
+[project.urls]
+"Homepage" = "https://github.com/tjsmart/aoc2023"
+
+[project.scripts]
+run = "lib.run:main"
+next = "lib.next:main"
+submit = "lib.submit:main"
+
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["day*", "lib*"]
+
+[tool.pyright]
+pythonVersion = "3.12"

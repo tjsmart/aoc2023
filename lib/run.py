@@ -43,3 +43,10 @@ def _format_duration(duration_ns: int) -> str:
             unit_str = "min"
 
     return f"{duration} {unit_str}"
+
+def main() -> int:
+    print("hello!")
+    return 0
+
+if __name__ == "__main__":
+    raise SystemExit(main())
