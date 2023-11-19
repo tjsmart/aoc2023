@@ -4,8 +4,6 @@ import os
 import re
 import subprocess
 import sys
-import urllib.error
-import urllib.parse
 import urllib.request
 from argparse import ArgumentParser
 from collections.abc import Sequence
@@ -15,7 +13,7 @@ from typing import NamedTuple
 
 
 THIS_DIR = Path(__file__).resolve().parent
-PARTFILE = re.compile(r".*/day(\d\d)/part\d\.py")
+PARTFILE = re.compile(r".*/day(\d\d)/part(\d)\.py")
 
 
 class DayPart(NamedTuple):
@@ -35,7 +33,7 @@ def _get_rootdir() -> Path:
         capture_output=True,
         text=True,
     )
-    return Path(result.stdout)
+    return Path(result.stdout.strip())
 
 
 def _get_year() -> int:
@@ -51,9 +49,9 @@ def _get_year() -> int:
 
 
 def _get_prev_daypart() -> DayPart | None:
-    root_dir = _get_rootdir()
+    rootdir = _get_rootdir()
     prev = (0, 2)
-    for dd in root_dir.glob("day*/part*.py"):
+    for dd in rootdir.glob("day*/part*.py"):
         m = PARTFILE.search(str(dd))
         if not m:
             continue
@@ -97,7 +95,7 @@ def create_next_files(year: int, next: DayPart, prev: DayPart | None) -> None:
     if not prev:
         prevfile = THIS_DIR / "template_part.py"
     else:
-        prevfile = _get_pyfile(next)
+        prevfile = _get_pyfile(prev)
 
     nextfile.write_text(prevfile.read_text())
     print(f"...{nextfile} written ✅")
@@ -128,7 +126,7 @@ def _get_input(year: int, day: int) -> str:
     url = f"https://adventofcode.com/{year}/day/{day}/input"
     headers = {"Cookie": _get_cookie()}
     req = urllib.request.Request(url, headers=headers)
-    output = urllib.request.urlopen(req).read().decode()
+    output = urllib.request.urlopen(req).read().decode().strip()
     print(f"...{url} fetched ✅")
     return output
 
