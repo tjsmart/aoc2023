@@ -1,125 +1,50 @@
 from __future__ import annotations
 
 import os
-import re
 import subprocess
 import sys
 import urllib.request
 from argparse import ArgumentParser
 from collections.abc import Sequence
-from functools import lru_cache
-from pathlib import Path
-from typing import NamedTuple
 
-
-THIS_DIR = Path(__file__).resolve().parent
-PARTFILE = re.compile(r".*/day(\d\d)/part(\d)\.py")
-
-
-class DayPart(NamedTuple):
-    day: int
-    part: int
-
-
-class HandledError(RuntimeError):
-    ...
-
-
-@lru_cache(maxsize=1)
-def _get_rootdir() -> Path:
-    result = subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    return Path(result.stdout.strip())
-
-
-def _get_year() -> int:
-    rootdir = _get_rootdir()
-    *_, year = rootdir.name.partition("aoc")
-    try:
-        return int(year)
-    except ValueError:
-        raise HandledError(
-            f"failed to parse year from rootdir name: {rootdir.name}, expected"
-            " name to be of the form 'aoc[year]', e.g., 'aoc2023'"
-        )
-
-
-def _get_prev_daypart() -> DayPart | None:
-    rootdir = _get_rootdir()
-    prev = (0, 2)
-    for dd in rootdir.glob("day*/part*.py"):
-        m = PARTFILE.search(str(dd))
-        if not m:
-            continue
-
-        other = tuple(map(int, m.groups()))
-        prev = max(prev, other)
-
-    if prev == (0, 2):
-        return None
-
-    return DayPart(*prev)
-
-
-def _get_next_daypart(prev: DayPart | None) -> DayPart:
-    if prev == (25, 2):
-        raise HandledError("It's over, go home!")
-
-    if prev is None:
-        return DayPart(1, 1)
-
-    if prev[1] == 1:
-        next = prev[0], prev[1] + 1
-    elif prev[1] == 2:
-        next = prev[0] + 1, 1
-    else:
-        raise HandledError(f"Last day/part was invalid: {prev[0]}/{prev[1]}")
-
-    return DayPart(*next)
+from ._helpers import DayPart
+from ._helpers import get_all_dayparts
+from ._helpers import get_rootdir
+from ._helpers import get_year
+from ._helpers import HandledError
+from ._helpers import THIS_DIR
 
 
 def create_next_files(year: int, next: DayPart, prev: DayPart | None) -> None:
     print(f"Generating files for day {next.day} part {next.part}...")
 
-    outdir = _get_outdir(next.day)
-    outdir.mkdir(exist_ok=True, parents=True)
-    print(f"...{outdir} created ✅")
+    next.outdir.mkdir(exist_ok=True, parents=True)
+    print(f"...{next.outdir} created ✅")
 
-    nextfile = _get_pyfile(next)
-    assert not nextfile.exists(), f"Whoops, {nextfile} already exists!"
+    assert not next.pyfile.exists(), f"Whoops, {next.pyfile} already exists!"
 
     if not prev:
-        prevfile = THIS_DIR / "template_part.py"
+        prev_src = (THIS_DIR / "template_part.py").read_text()
     else:
-        prevfile = _get_pyfile(prev)
+        prev_src = prev.pyfile.read_text()
 
-    nextfile.write_text(prevfile.read_text())
-    print(f"...{nextfile} written ✅")
+    next.pyfile.write_text(prev_src)
+    print(f"...{next.pyfile} written ✅")
 
-    (outdir / "__init__.py").touch(exist_ok=True)
+    (next.outdir / "__init__.py").touch(exist_ok=True)
 
     if next.part == 1:
-        _download_input(year, next.day)
+        _download_input(year, next)
 
     print(f"All finished, AOC day {next.day} part {next.part} is ready!")
 
 
-def _get_pyfile(dp: DayPart) -> Path:
-    return _get_outdir(dp.day) / f"part{dp.part}.py"
+def _download_input(year: int, dp: DayPart) -> None:
+    dp.outdir.mkdir(exist_ok=True, parents=True)
 
-
-def _download_input(year: int, day: int) -> None:
-    outdir = _get_outdir(day)
-    outdir.mkdir(exist_ok=True, parents=True)
-
-    input = _get_input(year, day)
-    inputfile = outdir / "input.txt"
-    inputfile.write_text(input)
-    print(f"...{inputfile} written ✅")
+    input = _get_input(year, dp.day)
+    dp.inputfile.write_text(input)
+    print(f"...{dp.inputfile} written ✅")
 
 
 def _get_input(year: int, day: int) -> str:
@@ -132,25 +57,24 @@ def _get_input(year: int, day: int) -> str:
 
 
 def _get_cookie() -> str:
-    session_file = _get_rootdir() / ".session"
+    session_file = get_rootdir() / ".session"
     return f"session={session_file.read_text().strip()}"
 
 
-def _get_outdir(day: int) -> Path:
-    return _get_rootdir() / f"day{day:02}"
+def _get_prev_and_next() -> tuple[DayPart |  None, DayPart]:
+    dps = get_all_dayparts()
+    prev = dps[-1] if dps else None
+    next = prev.next() if prev else DayPart.first()
+    return prev, next
 
 
 def _main() -> None:
-    year = _get_year()
-    prev = _get_prev_daypart()
-    next = _get_next_daypart(prev)
+    year = get_year()
+    prev, next = _get_prev_and_next()
 
     create_next_files(year, next, prev)
 
-    nextfile = _get_pyfile(next)
-    inputfile = _get_outdir(next.day) / "input.txt"
-
-    os.execlp("nvim", f"-O {nextfile} {inputfile}")
+    os.execlp("nvim", f"-O {next.pyfile} {next.inputfile}")
 
 
 def main(argv: Sequence[str] | None = None) -> int:
