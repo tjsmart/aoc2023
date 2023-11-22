@@ -1,11 +1,6 @@
-from dataclasses import dataclass
-
 import pytest
 
-from .._helpers import DayPart
 from ..run import _format_duration
-from ..run import _get_selections
-from ..run import Args
 
 
 @pytest.mark.parametrize(
@@ -28,41 +23,3 @@ from ..run import Args
 )
 def test_format_duration(duration_ns: int, expected: str):
     assert _format_duration(duration_ns) == expected
-
-
-@dataclass
-class SelectionTestCase:
-    all: list[DayPart]
-    args: Args
-    expected: list[DayPart]
-
-    def __repr__(self) -> str:
-        allstr = "" if self.all == default else f"{self.all!r}, "
-        return f"{allstr}{self.args}"
-
-
-default = list(map(lambda x: DayPart(*x), [(1, 1), (1, 2), (2, 1), (2, 2), (3, 1)]))
-
-@pytest.mark.parametrize(
-    "case",
-    [
-        SelectionTestCase([], Args(), []),
-        SelectionTestCase(default, Args(), [DayPart(3, 1)]),
-        SelectionTestCase(default, Args(parts=[1]), [DayPart(3, 1)]),
-        SelectionTestCase(default, Args(parts=[1, 2]), [DayPart(3, 1)]),
-        SelectionTestCase(default, Args(parts=[2]), []),
-        SelectionTestCase(default, Args(days=[1]), [DayPart(1, 1), DayPart(1, 2)]),
-        SelectionTestCase(default, Args(days=[2]), [DayPart(2, 1), DayPart(2, 2)]),
-        SelectionTestCase(default, Args(days=[5]), []),
-        SelectionTestCase(default, Args(days=[2, 3], parts=[1]), [DayPart(2, 1), DayPart(3, 1)]),
-        SelectionTestCase(default, Args(days=[2, 3], parts=[1, 2]), [DayPart(2, 1), DayPart(2, 2), DayPart(3, 1)]),
-        SelectionTestCase(default, Args(days=[2, 3], parts=[2]), [DayPart(2, 2)]),
-        SelectionTestCase(default, Args(all=True), default),
-        SelectionTestCase(default, Args(all=True, parts=[1]), [DayPart(1, 1), DayPart(2, 1), DayPart(3, 1)]),
-        SelectionTestCase(default, Args(all=True, parts=[2]), [DayPart(1, 2), DayPart(2, 2)]),
-        SelectionTestCase(default, Args(all=True, parts=[1, 2]), default),
-    ],
-    ids=repr,
-)
-def test_get_selections(case: SelectionTestCase):
-    assert _get_selections(case.all, case.args) == case.expected

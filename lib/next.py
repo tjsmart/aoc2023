@@ -2,17 +2,38 @@ from __future__ import annotations
 
 import os
 import subprocess
-import sys
 import urllib.request
 from argparse import ArgumentParser
 from collections.abc import Sequence
 
 from ._helpers import DayPart
 from ._helpers import get_all_dayparts
-from ._helpers import get_rootdir
+from ._helpers import get_cookie_headers
 from ._helpers import get_year
 from ._helpers import HandledError
 from ._helpers import THIS_DIR
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = ArgumentParser(description="Generate files for next day/part.")
+    _ = parser.parse_args(argv)
+
+    try:
+        _main()
+    except (HandledError, subprocess.CalledProcessError) as ex:
+        print("error:", ex)
+        return 1
+
+    return 0
+
+
+def _main() -> None:
+    year = get_year()
+    prev, next = _get_prev_and_next()
+
+    create_next_files(year, next, prev)
+
+    os.execlp("nvim", f"-O {next.pyfile} {next.inputfile}")
 
 
 def create_next_files(year: int, next: DayPart, prev: DayPart | None) -> None:
@@ -49,16 +70,10 @@ def _download_input(year: int, dp: DayPart) -> None:
 
 def _get_input(year: int, day: int) -> str:
     url = f"https://adventofcode.com/{year}/day/{day}/input"
-    headers = {"Cookie": _get_cookie()}
-    req = urllib.request.Request(url, headers=headers)
+    req = urllib.request.Request(url, headers=get_cookie_headers())
     output = urllib.request.urlopen(req).read().decode().strip()
     print(f"...{url} fetched ✅")
     return output
-
-
-def _get_cookie() -> str:
-    session_file = get_rootdir() / ".session"
-    return f"session={session_file.read_text().strip()}"
 
 
 def _get_prev_and_next() -> tuple[DayPart |  None, DayPart]:
@@ -66,28 +81,6 @@ def _get_prev_and_next() -> tuple[DayPart |  None, DayPart]:
     prev = dps[-1] if dps else None
     next = prev.next() if prev else DayPart.first()
     return prev, next
-
-
-def _main() -> None:
-    year = get_year()
-    prev, next = _get_prev_and_next()
-
-    create_next_files(year, next, prev)
-
-    os.execlp("nvim", f"-O {next.pyfile} {next.inputfile}")
-
-
-def main(argv: Sequence[str] | None = None) -> int:
-    parser = ArgumentParser(description="Generate files for next day/part.")
-    _ = parser.parse_args(argv)
-
-    try:
-        _main()
-    except (HandledError, subprocess.CalledProcessError) as ex:
-        print("error:", ex, file=sys.stderr)
-        return 1
-
-    return 0
 
 
 if __name__ == "__main__":

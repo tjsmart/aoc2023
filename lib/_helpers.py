@@ -6,6 +6,8 @@ import re
 import subprocess
 import warnings
 from collections.abc import Callable
+from dataclasses import dataclass
+from dataclasses import field
 from functools import lru_cache
 from pathlib import Path
 from typing import NamedTuple
@@ -59,6 +61,10 @@ class DayPart(NamedTuple):
     @property
     def inputfile(self) -> Path:
         return self.outdir / f"input.txt"
+
+    @property
+    def solutionfile(self) -> Path:
+        return self.outdir / f"solution.txt"
 
     def load_solution(self) -> Solution:
         mod = importlib.import_module(f"day{self.day:02}.part{self.part}")
@@ -131,3 +137,37 @@ def get_all_dayparts() -> list[DayPart]:
 
     dayparts.sort()
     return dayparts
+
+
+@dataclass
+class SelectionArgs:
+    all: bool = False
+    days: list[int] = field(default_factory=list)
+    parts: list[int] = field(default_factory=list)
+
+
+def get_selections(dayparts: list[DayPart], args: SelectionArgs) -> list[DayPart]:
+    dayparts = dayparts[:]
+    if not dayparts:
+        return []
+
+    match (args.all, args.days, args.parts):
+        case (False, [], []):
+            return dayparts[-1:]
+
+        case (False, [], parts):
+            days = [dayparts[-1].day]
+
+        case (_, days, parts):
+            days = days or [dp.day for dp in dayparts]
+
+        case _:
+            raise AssertionError("Should never happen")
+
+    parts = parts or [1, 2]
+    return [dp for dp in dayparts if dp.day in days and dp.part in parts]
+
+
+def get_cookie_headers() -> dict[str, str]:
+    session_file = get_rootdir() / ".session"
+    return {"Cookie": f"session={session_file.read_text().strip()}"}
