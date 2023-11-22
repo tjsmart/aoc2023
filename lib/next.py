@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+import sys
 import urllib.request
 from argparse import ArgumentParser
 from collections.abc import Sequence
@@ -33,14 +34,23 @@ def _main() -> None:
 
     create_next_files(year, next, prev)
 
-    os.execlp("nvim", f"-O {next.pyfile} {next.inputfile}")
+    sys.stdout.flush()
+    os.execlp(
+        "bash",
+        "bash",
+        "-c",
+        (
+            f"{sys.executable} -m pip install -e . -qqq"
+            f" & nvim -O {next.pyfile} {next.inputfile}"
+        ),
+    )
 
 
 def create_next_files(year: int, next: DayPart, prev: DayPart | None) -> None:
-    print(f"Generating files for day {next.day} part {next.part}...")
+    print(f"Generating files for day {next.day} part {next.part}:")
 
     next.outdir.mkdir(exist_ok=True, parents=True)
-    print(f"...{next.outdir} created ✅")
+    print(f"... {next.outdir} created ✅")
 
     assert not next.pyfile.exists(), f"Whoops, {next.pyfile} already exists!"
 
@@ -50,14 +60,14 @@ def create_next_files(year: int, next: DayPart, prev: DayPart | None) -> None:
         prev_src = prev.pyfile.read_text()
 
     next.pyfile.write_text(prev_src)
-    print(f"...{next.pyfile} written ✅")
+    print(f"... {next.pyfile} written ✅")
 
     (next.outdir / "__init__.py").touch(exist_ok=True)
 
     if next.part == 1:
         _download_input(year, next)
 
-    print(f"All finished, AOC day {next.day} part {next.part} is ready!")
+    print(f"All finished, AOC day {next.day} part {next.part} is ready! 🎉")
 
 
 def _download_input(year: int, dp: DayPart) -> None:
@@ -65,18 +75,18 @@ def _download_input(year: int, dp: DayPart) -> None:
 
     input = _get_input(year, dp.day)
     dp.inputfile.write_text(input)
-    print(f"...{dp.inputfile} written ✅")
+    print(f"... {dp.inputfile} written ✅")
 
 
 def _get_input(year: int, day: int) -> str:
     url = f"https://adventofcode.com/{year}/day/{day}/input"
     req = urllib.request.Request(url, headers=get_cookie_headers())
     output = urllib.request.urlopen(req).read().decode().strip()
-    print(f"...{url} fetched ✅")
+    print(f"... {url} fetched ✅")
     return output
 
 
-def _get_prev_and_next() -> tuple[DayPart |  None, DayPart]:
+def _get_prev_and_next() -> tuple[DayPart | None, DayPart]:
     dps = get_all_dayparts()
     prev = dps[-1] if dps else None
     next = prev.next() if prev else DayPart.first()

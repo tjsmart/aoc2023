@@ -60,11 +60,11 @@ class DayPart(NamedTuple):
 
     @property
     def inputfile(self) -> Path:
-        return self.outdir / f"input.txt"
+        return self.outdir / "input.txt"
 
     @property
     def solutionfile(self) -> Path:
-        return self.outdir / f"solution.txt"
+        return self.outdir / f"solution{self.part}.txt"
 
     def load_solution(self) -> Solution:
         mod = importlib.import_module(f"day{self.day:02}.part{self.part}")
