@@ -66,6 +66,10 @@ class DayPart(NamedTuple):
     def solutionfile(self) -> Path:
         return self.outdir / f"solution{self.part}.txt"
 
+    @property
+    def promptfile(self) -> Path:
+        return self.outdir / "prompt.md"
+
     def load_solution(self) -> Solution:
         mod = importlib.import_module(f"day{self.day:02}.part{self.part}")
         return mod.solution
@@ -119,6 +123,7 @@ def get_year() -> int:
             f"failed to parse year from rootdir name: {rootdir.name}, expected"
             " name to be of the form 'aoc[year]', e.g., 'aoc2023'"
         )
+
 
 def get_all_dayparts() -> list[DayPart]:
     """

@@ -13,6 +13,7 @@ from ._helpers import get_cookie_headers
 from ._helpers import get_year
 from ._helpers import HandledError
 from ._helpers import THIS_DIR
+from ._prompt_html_parser import parse_prompt_html_to_md
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -67,6 +68,8 @@ def create_next_files(year: int, next: DayPart, prev: DayPart | None) -> None:
     if next.part == 1:
         _download_input(year, next)
 
+    _download_prompt(year, next)
+
     print(f"All finished, AOC day {next.day} part {next.part} is ready! 🎉")
 
 
@@ -80,6 +83,27 @@ def _download_input(year: int, dp: DayPart) -> None:
 
 def _get_input(year: int, day: int) -> str:
     url = f"https://adventofcode.com/{year}/day/{day}/input"
+    req = urllib.request.Request(url, headers=get_cookie_headers())
+    output = urllib.request.urlopen(req).read().decode().strip()
+    print(f"... {url} fetched ✅")
+    return output
+
+
+def _download_prompt(year: int, dp: DayPart) -> None:
+    dp.outdir.mkdir(exist_ok=True, parents=True)
+
+    prompt = _get_prompt(year, dp.day)
+    dp.promptfile.write_text(prompt)
+    print(f"... {dp.promptfile} written ✅")
+
+
+def _get_prompt(year: int, day: int) -> str:
+    html = _get_prompt_html(year, day)
+    return parse_prompt_html_to_md(html)
+
+
+def _get_prompt_html(year: int, day: int) -> str:
+    url = f"https://adventofcode.com/{year}/day/{day}"
     req = urllib.request.Request(url, headers=get_cookie_headers())
     output = urllib.request.urlopen(req).read().decode().strip()
     print(f"... {url} fetched ✅")

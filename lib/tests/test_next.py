@@ -17,13 +17,20 @@ def mock_input():
         yield mock.return_value
 
 
+@pytest.fixture
+def mock_prompt():
+    with patch_mut("_get_prompt") as mock:
+        mock.return_value = "# AOC prompt\nyeah!"
+        yield mock.return_value
+
+
 @pytest.fixture(autouse=True)
 def mock_os_execlp():
     with patch.object(os, "execlp"):
         yield
 
 
-def test_next_can_create_first_thing(rootdir, mock_input):
+def test_next_can_create_first_thing(rootdir, mock_input, mock_prompt):
     next._main()
 
     nextfile = rootdir / "day01" / "part1.py"
@@ -38,8 +45,12 @@ def test_next_can_create_first_thing(rootdir, mock_input):
     assert nextfile.exists()
     assert nextfile.read_text() == mock_input
 
+    nextfile = rootdir / "day01" / "prompt.md"
+    assert nextfile.exists()
+    assert nextfile.read_text() == mock_prompt
 
-def test_next_can_create_part1(rootdir, mock_input):
+
+def test_next_can_create_part1(rootdir, mock_input, mock_prompt):
     (rootdir / "day12").mkdir()
     (rootdir / "day12" / "part2.py").write_text("day12 part2 contents")
 
@@ -57,8 +68,12 @@ def test_next_can_create_part1(rootdir, mock_input):
     assert nextfile.exists()
     assert nextfile.read_text() == mock_input
 
+    nextfile = rootdir / "day13" / "prompt.md"
+    assert nextfile.exists()
+    assert nextfile.read_text() == mock_prompt
 
-def test_next_can_create_part2(rootdir):
+
+def test_next_can_create_part2(rootdir, mock_prompt):
     (rootdir / "day12").mkdir()
     (rootdir / "day12" / "part1.py").write_text("part1 contents")
 
@@ -67,6 +82,10 @@ def test_next_can_create_part2(rootdir):
     nextfile = rootdir / "day12" / "part2.py"
     assert nextfile.exists()
     assert nextfile.read_text() == "part1 contents"
+
+    nextfile = rootdir / "day12" / "prompt.md"
+    assert nextfile.exists()
+    assert nextfile.read_text() == mock_prompt
 
 
 # def test_get_input():
