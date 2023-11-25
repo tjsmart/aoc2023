@@ -10,8 +10,8 @@ THIS_DIR = Path(__file__).resolve().parent
 
 @pytest.mark.parametrize(
     ("html_file", "expected_md_file"), [
-        ("./prompt_one_article.html", "./expected_prompt_one_article.md"),
-        ("./prompt_two_articles.html", "./expected_prompt_two_articles.md"),
+        ("./prompt_examples/prompt_one_article.html.txt", "./prompt_examples/expected_prompt_one_article.md.txt"),
+        ("./prompt_examples/prompt_two_articles.html.txt", "./prompt_examples/expected_prompt_two_articles.md.txt"),
     ]
 )
 def test_parser_matches_saved_templates(html_file: str, expected_md_file: str):
