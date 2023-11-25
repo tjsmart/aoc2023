@@ -31,7 +31,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         solution = dp.load_solution()
         print(f"{dp.emoji} ({dp.day:02}/{dp.part}) ➡️ ", end="")
         if result := time_it(solution, input):
-            dp.solutionfile.write_text(result)
+            dp.solutionfile.write_text(str(result))
         else:
             rtc |= 1
 
@@ -84,9 +84,7 @@ def _format_duration(duration_ns: int) -> str:
 
 @dataclass
 class _Args(SelectionArgs):
-    all: bool = False
-    days: list[int] = field(default_factory=list)
-    parts: list[int] = field(default_factory=list)
+    ...
 
 
 if __name__ == "__main__":
