@@ -25,8 +25,8 @@ def mock_prompt():
 
 
 @pytest.fixture(autouse=True)
-def mock_os_execlp():
-    with patch.object(os, "execlp"):
+def mock_open():
+    with patch_mut("_open"):
         yield
 
 

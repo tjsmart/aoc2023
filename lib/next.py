@@ -6,6 +6,7 @@ import sys
 import urllib.request
 from argparse import ArgumentParser
 from collections.abc import Sequence
+from typing import NoReturn
 
 from ._helpers import DayPart
 from ._helpers import get_all_dayparts
@@ -34,16 +35,33 @@ def _main() -> None:
     prev, next = _get_prev_and_next()
 
     create_next_files(year, next, prev)
+    _open(next)
+
+
+def _open(next: DayPart) -> NoReturn:
+    lines = next.promptfile.read_text().splitlines()
+    for startline, line in reversed(list(enumerate(lines, 1))):
+        if line.startswith("## "):
+            break
+    else:
+        startline = 1
+
+    nvim_cmd = (
+        "nvim"
+        " -c 'lua require(\"harpoon.mark\").clear_all()'"
+        f' -c \'lua require("harpoon.mark").add_file("{next.promptfile}")\''
+        f' -c \'lua require("harpoon.mark").add_file("{next.pyfile}")\''
+        f' -c \'lua require("harpoon.mark").add_file("{next.inputfile}")\''
+        f" -c '{startline}'"
+        f" {next.promptfile}"
+    )
 
     sys.stdout.flush()
     os.execlp(
         "bash",
         "bash",
         "-c",
-        (
-            f"{sys.executable} -m pip install -e . -qqq"
-            f" & nvim -O {next.pyfile} {next.inputfile}"
-        ),
+        f"{sys.executable} -m pip install -e . -qqq & {nvim_cmd}",
     )
 
 
