@@ -3,8 +3,8 @@ from argparse import ArgumentParser
 from collections.abc import Callable
 from collections.abc import Sequence
 from dataclasses import dataclass
-from dataclasses import field
 
+from ._helpers import DayPart
 from ._helpers import get_all_dayparts
 from ._helpers import get_selections
 from ._helpers import SelectionArgs
@@ -20,11 +20,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--all", default=False, action="store_true")
     parser.add_argument("--days", type=int, action="append")
     parser.add_argument("--parts", type=int, action="append")
+    parser.add_argument("--test", default=False, action="store_true")
 
-    args = parser.parse_args(argv, namespace=_Args())
+    args, other_args = parser.parse_known_args(argv, namespace=_Args())
     dayparts = get_all_dayparts()
     selections = get_selections(dayparts, args)
 
+    if args.test:
+        _test_selections(selections, other_args)
+    else:
+        _run_selections(selections)
+
+
+def _run_selections(selections: list[DayPart]) -> int:
     rtc = 0
     for dp in selections:
         input = dp.inputfile.read_text()
@@ -34,8 +42,18 @@ def main(argv: Sequence[str] | None = None) -> int:
             dp.solutionfile.write_text(str(result))
         else:
             rtc |= 1
-
     return rtc
+
+
+def _test_selections(
+    selections: list[DayPart],
+    pytest_args: list[str] | None = None,
+) -> int:
+    import pytest
+
+    args = [*pytest_args, "--"] if pytest_args else ["--"]
+    args.extend(str(dp.pyfile) for dp in selections)
+    return pytest.main(args)
 
 
 def time_it[R, **P](
@@ -84,7 +102,7 @@ def _format_duration(duration_ns: int) -> str:
 
 @dataclass
 class _Args(SelectionArgs):
-    ...
+    test: bool = False
 
 
 if __name__ == "__main__":
