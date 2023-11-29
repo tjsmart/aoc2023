@@ -3,9 +3,13 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+import time
+import urllib.error
 import urllib.request
 from argparse import ArgumentParser
 from collections.abc import Sequence
+from datetime import datetime
+from datetime import timedelta
 from typing import NoReturn
 
 from ._helpers import DayPart
@@ -34,8 +38,34 @@ def _main() -> None:
     year = get_year()
     prev, next = _get_prev_and_next()
 
+    _check_if_ready(year, next)
+
     create_next_files(year, next, prev)
     _open(next)
+
+
+def _check_if_ready(year: int, next: DayPart) -> None:
+    released_at = datetime(year=year, month=12, day=next.day, hour=0)
+    while True:
+        estnow = datetime.utcnow() + timedelta(hours=3)
+        time_to_wait = released_at - estnow
+        if time_to_wait.total_seconds() < 5:
+            return
+
+        if time_to_wait >= timedelta(hours=1):
+            hours_to_wait = time_to_wait.total_seconds() / (60 * 60)
+            raise HandledError(f"Still have a long time to wait: {hours_to_wait:.1f} hours")
+
+        wait_str = _format_timedelta(time_to_wait)
+        print(f"waiting for the next input to go live! {wait_str}", end="\r")
+        time.sleep(1)
+
+
+def _format_timedelta(td: timedelta) -> str:
+    seconds = int(td.total_seconds())
+    hours, seconds = divmod(seconds, 60 * 60)
+    minutes, seconds = divmod(seconds, 60)
+    return f"{hours:02}:{minutes:02}:{seconds:02}"
 
 
 def _open(next: DayPart) -> NoReturn:
@@ -94,7 +124,16 @@ def create_next_files(year: int, next: DayPart, prev: DayPart | None) -> None:
 def _download_input(year: int, dp: DayPart) -> None:
     dp.outdir.mkdir(exist_ok=True, parents=True)
 
-    input = _get_input(year, dp.day)
+    while True:
+        try:
+            input = _get_input(year, dp.day)
+        except urllib.error.URLError:
+            print("... waiting 😴 for input to be ready ...")
+            time.sleep(1)
+            continue
+        else:
+            break
+
     dp.inputfile.write_text(input)
     print(f"... {dp.inputfile} written ✅")
 
