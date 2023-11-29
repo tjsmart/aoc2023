@@ -8,6 +8,7 @@ import urllib.request
 from collections.abc import Sequence
 from enum import Enum
 
+from . import next
 from ._helpers import DayPart
 from ._helpers import get_all_dayparts
 from ._helpers import get_cookie_headers
@@ -40,7 +41,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         if rtc := run_selections([most_recent]):
             return rtc
 
-    return submit_solution(year, most_recent, solution)
+    if rtc := submit_solution(year, most_recent, solution):
+        return rtc
+
+    if most_recent.part == 1:
+        # time for the next part!
+        return next.main([])
+
+    return 0
 
 
 def submit_solution(year: int, dp: DayPart, solution: str) -> int:
