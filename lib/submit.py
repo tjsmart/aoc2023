@@ -6,15 +6,13 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from collections.abc import Sequence
-from dataclasses import dataclass
 from enum import Enum
 
 from ._helpers import DayPart
 from ._helpers import get_all_dayparts
 from ._helpers import get_cookie_headers
-from ._helpers import get_selections
 from ._helpers import get_year
-from ._helpers import SelectionArgs
+from .run import run_selections
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -24,27 +22,25 @@ def main(argv: Sequence[str] | None = None) -> int:
             " is submitted"
         ),
     )
-    parser.add_argument("--all", default=False, action="store_true")
-    parser.add_argument("--days", type=int, action="append")
-    parser.add_argument("--parts", type=int, action="append")
-
-    args = parser.parse_args(argv, namespace=_Args())
+    _ = parser.parse_args(argv)
 
     year = get_year()
     dayparts = get_all_dayparts()
-    selections = get_selections(dayparts, args)
+    if not dayparts:
+        raise SystemExit("error: no files exist yet to submit!")
 
-    rtc = 0
-    for dp in selections:
-        try:
-            solution = dp.solutionfile.read_text().strip()
-        except FileNotFoundError:
-            print(f"No solution exists yet for: {dp}")
-            rtc |= 1
-        else:
-            rtc |= submit_solution(year, dp, solution)
+    most_recent = dayparts.pop()
+    try:
+        solution = most_recent.solutionfile.read_text().strip()
+    except FileNotFoundError:
+        raise SystemExit(f"error: no solution exists yet for: {most_recent}")
 
-    return rtc
+    if most_recent.solutionfile.stat().st_mtime < most_recent.pyfile.stat().st_mtime:
+        print("solution has been modified, executing `run` again ...")
+        if rtc := run_selections([most_recent]):
+            return rtc
+
+    return submit_solution(year, most_recent, solution)
 
 
 def submit_solution(year: int, dp: DayPart, solution: str) -> int:
@@ -79,6 +75,12 @@ def _parse_post_contents(contents: str) -> int:
         return 1
 
 
+# That's not the right answer; your answer is too low.
+# You gave an answer too recently; you have to wait after submitting an answer before trying again.  You have 25s left to wait.
+# You gave an answer too recently; you have to wait after submitting an answer before trying again.  You have 4m 37s left to wait.
+# That's not the right answer; your answer is too high.
+# That's the right answer!
+
 class _ErrorRegex(Enum):
     TOO_QUICK = re.compile("You gave an answer too recently.*to wait.")
     WRONG = re.compile(r"That's not the right answer.*?\.")
@@ -86,11 +88,6 @@ class _ErrorRegex(Enum):
 
 
 RIGHT = "That's the right answer!"
-
-
-@dataclass
-class _Args(SelectionArgs):
-    ...
 
 
 if __name__ == "__main__":

@@ -29,10 +29,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.test:
         _test_selections(selections, other_args)
     else:
-        _run_selections(selections)
+        run_selections(selections)
 
 
-def _run_selections(selections: list[DayPart]) -> int:
+def run_selections(selections: list[DayPart]) -> int:
     rtc = 0
     for dp in selections:
         input = dp.inputfile.read_text()
