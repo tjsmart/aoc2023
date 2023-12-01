@@ -47,7 +47,7 @@ def _main() -> None:
 def _check_if_ready(year: int, next: DayPart) -> None:
     released_at = datetime(year=year, month=12, day=next.day, hour=0)
     while True:
-        estnow = datetime.utcnow() + timedelta(hours=3)
+        estnow = datetime.utcnow() - timedelta(hours=5)
         time_to_wait = released_at - estnow
         if time_to_wait.total_seconds() < 5:
             return
