@@ -11,6 +11,8 @@ from typing import overload
 def collect_lines[T](
     s: str,
     parser: Callable[[str], T],
+    *,
+    debug: bool = False,
 ) -> list[T]:
     ...
 
@@ -19,6 +21,8 @@ def collect_lines[T](
     s: str,
     parser: Callable[[str], T],
     container: type[tuple],
+    *,
+    debug: bool = False,
 ) -> tuple[T]:
     ...
 
@@ -27,6 +31,8 @@ def collect_lines[K, V](
     s: str,
     parser: Callable[[str], tuple[K, V]],
     container: type[dict],
+    *,
+    debug: bool = False,
 ) -> dict[K, V]:
     ...
 
@@ -35,6 +41,8 @@ def collect_lines[T](
     s: str,
     parser: Callable[[str], T],
     container: type[set],
+    *,
+    debug: bool = False,
 ) -> set[T]:
     ...
 
@@ -43,6 +51,8 @@ def collect_lines[T](
     s: str,
     parser: Callable[[str], T],
     container: type[tuple],
+    *,
+    debug: bool = False,
 ) -> tuple[T]:
     ...
 
@@ -51,6 +61,8 @@ def collect_lines[T](
     s: str,
     parser: Callable[[str], T],
     container: type[Iterable[T]],
+    *,
+    debug: bool = False,
 ) -> tuple[T]:
     ...
 
@@ -58,22 +70,52 @@ def collect_lines[T, U](
     s: str,
     parser: Callable[[str], T],
     container: Callable[[Iterable[T]], U] = list,
+    *,
+    debug: bool = False,
 ) -> U:
-    return container(map(parser, s.splitlines()))
+    if debug:
+        def parser_used(s: str, /) -> T:
+            rslt = parser(s)
+            print(f"{s} -> {rslt}")
+            return rslt
+    else:
+        parser_used = parser
+
+    return container(map(parser_used, s.splitlines()))
 
 
 def collect_block_lines[T](
     s: str,
     parser: Callable[[str], T],
+    *,
+    debug: bool = False,
 ) -> list[list[T]]:
-    return [collect_lines(block, parser) for block in s.split("\n\n")]
+    if debug:
+        def collect_lines_used(block: str, parser: Callable[[str], T], /) -> list[T]:
+            rslt = collect_lines(block, parser, debug=debug)
+            print(f"block -> {rslt}")
+            return rslt
+    else:
+        collect_lines_used = collect_lines
+
+    return [collect_lines_used(block, parser) for block in s.split("\n\n")]
 
 
 def collect_block_statements[T](
     s: str,
     parser: Callable[[str], T],
+    *,
+    debug: bool = False,
 ) -> list[T]:
-    return [parser(block) for block in s.split("\n\n")]
+    if debug:
+        def parser_used(block: str, /) -> T:
+            rslt = parser(block)
+            print(f"{block}\n  gives: {rslt}")
+            return rslt
+    else:
+        parser_used = parser
+
+    return [parser_used(block) for block in s.split("\n\n")]
 
 
 class Point(NamedTuple):
