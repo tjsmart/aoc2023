@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
@@ -74,6 +75,8 @@ def _format_timedelta(td: timedelta) -> str:
 
 
 def _open(next: DayPart) -> NoReturn:
+    _configure_harpoon_files(next)
+
     lines = next.promptfile.read_text().splitlines()
     for startline, line in reversed(list(enumerate(lines, 1))):
         if line.startswith("## "):
@@ -81,23 +84,34 @@ def _open(next: DayPart) -> NoReturn:
     else:
         startline = 1
 
-    nvim_cmd = (
-        "nvim"
-        " -c 'lua require(\"harpoon.mark\").clear_all()'"
-        f' -c \'lua require("harpoon.mark").add_file("{next.promptfile}")\''
-        f' -c \'lua require("harpoon.mark").add_file("{next.pyfile}")\''
-        f' -c \'lua require("harpoon.mark").add_file("{next.inputfile}")\''
-        f" -c '{startline}'"
-        f" {next.promptfile}"
-    )
-
     sys.stdout.flush()
     os.execlp(
         "bash",
         "bash",
         "-c",
-        f"{sys.executable} -m pip install -e . -qqq & {nvim_cmd}",
+        (
+            f"{sys.executable} -m pip install -e . -qqq"
+            f" & nvim -c '{startline}' {next.promptfile}"
+        ),
     )
+
+
+def _configure_harpoon_files(next: DayPart) -> None:
+    harpoon_json_file = Path().home() / ".local" / "share" / "nvim" / "harpoon.json"
+    try:
+        data = json.loads(harpoon_json_file.read_text())
+        repodir = str(get_rootdir())
+
+        data['projects'][repodir]['mark']['marks'] = [
+            {'col': 0, 'row': 0, 'filename': str(next.promptfile.relative_to(repodir))},
+            {'col': 0, 'row': 0, 'filename': str(next.pyfile.relative_to(repodir))},
+            {'col': 0, 'row': 0, 'filename': str(next.inputfile.relative_to(repodir))},
+        ]
+
+        harpoon_json_file.write_text(json.dumps(data))
+
+    except Exception as ex:
+        print(f"... bummer, couldn't find the harpoon configuration file: {ex}")
 
 
 def create_next_files(year: int, next: DayPart, prev: DayPart | None) -> None:
