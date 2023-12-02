@@ -254,7 +254,7 @@ def _star_count_to_md_table(stars: list[int]) -> list[str]:
     header = "|  day  | stars |\n| ----- | ----- | "
     row = "|   {day:02d}  |{stars}|"
     lines = [header]
-    count_to_str = ["   --  ", "  ⭐-  ", "  ⭐⭐ "]
+    count_to_str = ["       ", "  ⭐   ", "  ⭐⭐ "]
     lines.extend(
         row.format(day=day, stars=count_to_str[count])
         for day, count in enumerate(stars, 1)
