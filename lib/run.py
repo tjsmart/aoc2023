@@ -27,9 +27,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     selections = get_selections(dayparts, args)
 
     if args.test:
-        _test_selections(selections, other_args)
+        return _test_selections(selections, other_args)
     else:
-        run_selections(selections)
+        return run_selections(selections)
 
 
 def run_selections(selections: list[DayPart]) -> int:
