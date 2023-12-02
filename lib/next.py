@@ -229,7 +229,7 @@ def _update_readme_stars(readme_md: Path, stars: list[int]) -> None:
     starting_lines, ending_lines = _partition_md_on_table(lines)
     new_table = _star_count_to_md_table(stars)
 
-    new_lines = starting_lines + new_table + ending_lines
+    new_lines = starting_lines + new_table + ending_lines + [""]
     readme_md.write_text("\n".join(new_lines))
 
 
@@ -245,13 +245,13 @@ def _partition_md_on_table(lines: list[str]) -> tuple[list[str], list[str]]:
         if not line.startswith("| "):
             break
     else:
-        assert False, f"Failed to parse readme table?: {"\n".join(lines)}"
+        ending_idx = len(lines)
 
     return lines[:starting_idx], lines[ending_idx:]
 
 
 def _star_count_to_md_table(stars: list[int]) -> list[str]:
-    header = "|  day  | stars |\n| ----- | ----- | "
+    header = "|  day  | stars |\n| ----- | ----- |"
     row = "|   {day:02d}  |{stars}|"
     lines = [header]
     count_to_str = ["       ", "  ⭐   ", "  ⭐⭐ "]
