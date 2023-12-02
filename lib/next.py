@@ -84,16 +84,31 @@ def _open(next: DayPart) -> NoReturn:
     else:
         startline = 1
 
-    sys.stdout.flush()
+    exit_cmd = (
+        "echo '🤘 ready to rock and roll! 🤘'"
+        if _in_nvim()
+        else f"nvim -c '{startline}' {next.promptfile}"
+    )
+
+    sys.stdout.flush()  # suggested by os.execlp
     os.execlp(
         "bash",
         "bash",
         "-c",
         (
             f"{sys.executable} -m pip install -e . -qqq"
-            f" & nvim -c '{startline}' {next.promptfile}"
+            f" & {exit_cmd}"
         ),
     )
+
+
+def _in_nvim() -> bool:
+    cur_pid = os.getpid()
+    result = subprocess.run(["pstree", "-aps", str(cur_pid)], capture_output=True, text=True)
+    if result.returncode:
+        print("... failed to check if we are in neovim :/")
+        return False
+    return "nvim" in result.stdout
 
 
 def _configure_harpoon_files(next: DayPart) -> None:
