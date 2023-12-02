@@ -14,6 +14,7 @@ def parse_prompt_html_to_md(html: str) -> str:
     parser.feed(html)
     return parser.get_result()
 
+
 class PromptHTMLParser(HTMLParser):
     def __init__(self) -> None:
         super().__init__()
@@ -39,7 +40,7 @@ class PromptHTMLParser(HTMLParser):
         elif not self._processing:
             return
 
-        logger.debug(f"processing tag: {tag}")
+        logger.debug(f"processing tag: {tag} --  [{_list_tags(self)}]")
         ElementType = get_element_type(tag)
         if not ElementType:
             logger.debug(f"Ignoring: {tag}")
@@ -51,7 +52,7 @@ class PromptHTMLParser(HTMLParser):
         if not self._processing:
             return
 
-        logger.debug(f"closing tag: {tag}")
+        logger.debug(f"closing tag: {tag} -- [{_list_tags(self)}]")
         if self._tagstack[-1].name != tag:
             logger.debug(f"Ignoring ending tag: {tag}")
             return
@@ -296,3 +297,7 @@ class UnsupportedSubElement(RuntimeError):
             f"Element of type {type(data).__name__!r} is unsupported by parent"
             f" of type {root.__name__!r}: {str_data}"
         )
+
+
+def _list_tags(x: PromptHTMLParser) -> str:
+    return ', '.join(tag.name for tag in x._tagstack)
