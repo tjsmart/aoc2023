@@ -7,11 +7,14 @@ import urllib.parse
 import urllib.request
 from collections.abc import Sequence
 from enum import Enum
+from pathlib import Path
 
 from . import next
+from ._calendar_html_parser import parse_calendar_stars_html_to_star_count
 from ._helpers import DayPart
 from ._helpers import get_all_dayparts
 from ._helpers import get_cookie_headers
+from ._helpers import get_rootdir
 from ._helpers import get_year
 
 
@@ -49,6 +52,7 @@ def submit_daypart(dp: DayPart) -> int:
         return rtc
 
     dp.mark_solved()
+    _update_calendar(year)
     if dp.part == 1:
         # time for the next part!
         return next.main([])
@@ -101,6 +105,67 @@ class _ErrorRegex(Enum):
 
 
 RIGHT = "That's the right answer!"
+
+
+def _update_calendar(year: int) -> None:
+    readme_md = get_rootdir() / "README.md"
+
+    html = _get_home_html(year)
+    stars = parse_calendar_stars_html_to_star_count(html)
+    _update_readme_stars(readme_md, stars)
+
+    print("updated calendar with more stars ✨✨")
+
+
+def _get_home_html(year: int) -> str:
+    url = f"https://adventofcode.com/{year}"
+    req = urllib.request.Request(url, headers=get_cookie_headers())
+    output = urllib.request.urlopen(req).read().decode().strip()
+    return output
+
+
+def _update_readme_stars(readme_md: Path, stars: list[int]) -> None:
+    if readme_md.exists():
+        lines = readme_md.read_text().splitlines()
+    else:
+        lines = []
+
+    starting_lines, ending_lines = _partition_md_on_table(lines)
+    new_table = _star_count_to_md_table(stars)
+
+    new_lines = starting_lines + new_table + ending_lines + [""]
+    readme_md.write_text("\n".join(new_lines))
+
+
+def _partition_md_on_table(lines: list[str]) -> tuple[list[str], list[str]]:
+    try:
+        starting_idx = lines.index("|  day  | stars |")
+    except ValueError:
+        return lines, []
+
+    for ending_idx, line in enumerate(lines):
+        if ending_idx <= starting_idx:
+            continue
+        if not line.startswith("| "):
+            break
+    else:
+        ending_idx = len(lines)
+
+    return lines[:starting_idx], lines[ending_idx:]
+
+
+def _star_count_to_md_table(stars: list[int]) -> list[str]:
+    header = "|  day  | stars |\n| ----- | ----- |"
+    row = "|   {day:02d}  |{stars}|"
+    lines = [header]
+    count_to_str = ["       ", "  ⭐   ", "  ⭐⭐ "]
+    lines.extend(
+        row.format(day=day, stars=count_to_str[count])
+        for day, count in enumerate(stars, 1)
+    )
+    return lines
+
+
 
 
 if __name__ == "__main__":
