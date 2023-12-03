@@ -137,7 +137,7 @@ def create_next_files(year: int, next: DayPart, prev: DayPart | None) -> None:
 
     assert not next.pyfile.exists(), f"Whoops, {next.pyfile} already exists!"
 
-    if not prev:
+    if not prev or next.part == 1:
         prev_src = (THIS_DIR / "template_part.py").read_text()
     else:
         prev_src = prev.pyfile.read_text()
