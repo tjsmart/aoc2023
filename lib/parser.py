@@ -140,6 +140,11 @@ class Point(NamedTuple):
     def __mod__(self, other: tuple[int, int] | int) -> Point:
         return _point_operation(self, other, operator.mod, "%")
 
+    def is_adjacent_to(self, other: tuple[int, int]) -> bool:
+        dx = self.x - other[0]
+        dy = self.y - other[1]
+        return abs(dx) <= 1 and abs(dy) <= 1
+
 
 def _point_operation(
     point: Point,
