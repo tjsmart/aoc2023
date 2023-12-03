@@ -104,6 +104,23 @@ class DayPart(NamedTuple):
     def mark_solved(self) -> None:
         self.solutionfile.chmod(0o444)
 
+    @property
+    def guessfile(self) -> Path:
+        return self.outdir / f"guesses{self.part}.txt"
+
+    def add_guess(self, value: str) -> bool:
+        """
+        Add to set of locally saved previous guesses.
+        Returns True/False if guess is new/old.
+        """
+        guessfile_contents = self.guessfile.read_text()
+        prev_guesses = set(guessfile_contents.splitlines())
+        if value in prev_guesses:
+            return False
+        else:
+            self.guessfile.write_text(f"{guessfile_contents}\n{value}")
+            return True
+
 
 class HandledError(RuntimeError):
     ...

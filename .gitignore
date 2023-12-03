@@ -1,6 +1,7 @@
 build/
 dist/
 *.egg-info
+guesses*.txt
 *.pyc
 __pycache__
 .session

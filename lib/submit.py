@@ -25,27 +25,31 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     _ = parser.parse_args(argv)
 
-    year = get_year()
     dayparts = get_all_dayparts()
     if not dayparts:
         raise SystemExit("error: no files exist yet to submit!")
 
     most_recent = dayparts.pop()
-    try:
-        solution = most_recent.solutionfile.read_text().strip()
-    except FileNotFoundError:
-        raise SystemExit(f"error: no solution exists yet for: {most_recent}")
+    return submit_daypart(most_recent)
 
-    if most_recent.solutionfile.stat().st_mtime < most_recent.pyfile.stat().st_mtime:
+
+def submit_daypart(dp: DayPart) -> int:
+    year = get_year()
+    try:
+        solution = dp.solutionfile.read_text().strip()
+    except FileNotFoundError:
+        raise SystemExit(f"error: no solution exists yet for: {dp}")
+
+    if dp.solutionfile.stat().st_mtime < dp.pyfile.stat().st_mtime:
         print("solution has been modified, executing `run` again ...")
-        if rtc := run_selections([most_recent]):
+        if rtc := run_selections([dp]):
             return rtc
 
-    if rtc := submit_solution(year, most_recent, solution):
+    if rtc := submit_solution(year, dp, solution):
         return rtc
 
-    most_recent.mark_solved()
-    if most_recent.part == 1:
+    dp.mark_solved()
+    if dp.part == 1:
         # time for the next part!
         return next.main([])
 
