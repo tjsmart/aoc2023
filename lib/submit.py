@@ -11,6 +11,7 @@ from pathlib import Path
 
 from . import next
 from ._calendar_html_parser import parse_calendar_stars_html_to_star_count
+from ._helpers import Color
 from ._helpers import DayPart
 from ._helpers import get_all_dayparts
 from ._helpers import get_cookie_headers
@@ -81,14 +82,14 @@ def _parse_post_contents(contents: str) -> int:
     for error_regex in _ErrorRegex:
         error_match = error_regex.value.search(contents)
         if error_match:
-            print(f"\033[41m{error_match[0]}\033[m")
+            print(f"{Color.RedBack.format(error_match[0])} 😿")
             return 1
 
     if RIGHT in contents:
-        print(f"\033[42m{RIGHT}\033[m")
+        print(f"{Color.GreenBack.format(RIGHT)} 😸")
         return 0
     else:
-        print(f"\033[41m{"unexpected output"}\033[m:\n{contents}")
+        print(f"{Color.RedBack.format("unexpected output")} 🙀:\n{contents}")
         return 1
 
 

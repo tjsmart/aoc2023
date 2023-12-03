@@ -218,4 +218,4 @@ class Color(Enum):
     BlueBack = 44
 
     def format(self, text: str) -> str:
-        return f"\033[{self.value}m{text}\033[0m"
+        return f"\033[{self.value}m{text}\033[0m"  # ]]
