@@ -46,6 +46,10 @@ class PromptHTMLParser(HTMLParser):
             logger.debug(f"Ignoring: {tag}")
             return
 
+        if self._tagstack and type(self._tagstack[-1]) is ElementType:
+            logger.debug("detected a possibly erroneous tag, treating it as an ending tag instead")
+            return self.handle_endtag(tag)
+
         self._tagstack.append(ElementType(attrdict))
 
     def handle_endtag(self, tag) -> None:
