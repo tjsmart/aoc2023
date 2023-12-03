@@ -170,6 +170,7 @@ def _download_input(year: int, dp: DayPart) -> None:
             break
 
     dp.inputfile.write_text(input)
+    dp.inputfile.chmod(0o444)
     print(f"... {dp.inputfile} written ✅")
 
 

@@ -44,6 +44,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if rtc := submit_solution(year, most_recent, solution):
         return rtc
 
+    most_recent.mark_solved()
     if most_recent.part == 1:
         # time for the next part!
         return next.main([])

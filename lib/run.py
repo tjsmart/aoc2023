@@ -4,6 +4,7 @@ from collections.abc import Callable
 from collections.abc import Sequence
 from dataclasses import dataclass
 
+from ._helpers import Color
 from ._helpers import DayPart
 from ._helpers import get_all_dayparts
 from ._helpers import get_selections
@@ -38,10 +39,30 @@ def run_selections(selections: list[DayPart]) -> int:
         input = dp.inputfile.read_text()
         solution = dp.load_solution()
         print(f"{dp.emoji} ({dp.day:02}/{dp.part}) ➡️ ", end="")
-        if result := time_it(solution, input):
-            dp.solutionfile.write_text(str(result))
-        else:
-            rtc |= 1
+        result = time_it(solution, input)
+
+        match result:
+            case Cancelled(duration):
+                print(f"{Color.YellowText.format(f"solution cancelled after {duration}")} 🛑")
+                rtc |= 1
+
+            case Finished(None, _):
+                print(f"{Color.YellowText.format("no answer provided?!")} 👻")
+                rtc |= 1
+
+            case Finished(result, duration):
+                if dp.is_solved():
+                    correct = str(result) == dp.solutionfile.read_text()
+                    if correct:
+                        print(f"{Color.GreenText.format(f"{result = }, duration = {duration}")} ✅")
+                    else:
+                        print(f"{Color.RedText.format(f"{result = }, duration = {duration}")} ❌")
+                        rtc |= 1
+                else:
+                    dp.solutionfile.write_text(str(result))
+                    print(f"{Color.BlueText.format(f"{result = }, duration = {duration}")} 🚀")
+                    # TODO: check if solution is "new"
+
     return rtc
 
 
@@ -56,25 +77,33 @@ def _test_selections(
     return pytest.main(args)
 
 
+@dataclass
+class Finished[R]:
+    result: R | None
+    duration: str
+
+@dataclass
+class Cancelled:
+    duration: str
+
+type SolutionResult[R] = Finished[R] | Cancelled
+
 def time_it[R, **P](
     solution: Callable[P, R],
     *args: P.args,
     **kwargs: P.kwargs,
-) -> R | None:
+) -> SolutionResult[R]:
     start = time.monotonic_ns()
     try:
         result = solution(*args, **kwargs)
     except KeyboardInterrupt:
         end = time.monotonic_ns()
         duration = _format_duration(end - start)
-        print(f"solution cancelled after {duration}")
-        return None
+        return Cancelled(duration)
 
     end = time.monotonic_ns()
     duration = _format_duration(end - start)
-
-    print(f"{result = }, duration = {duration}")
-    return result
+    return Finished(result, duration)
 
 
 def _format_duration(duration_ns: int) -> str:

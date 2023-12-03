@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import importlib
 import logging
+import os
 import re
 import subprocess
 import warnings
 from collections.abc import Callable
 from dataclasses import dataclass
 from dataclasses import field
+from enum import Enum
 from functools import lru_cache
 from pathlib import Path
 from typing import NamedTuple
@@ -96,6 +98,12 @@ class DayPart(NamedTuple):
     def emoji(self) -> str:
         return _EMOJI_LIST[self.day]
 
+    def is_solved(self) -> bool:
+        return os.access(self.solutionfile, os.W_OK)
+
+    def mark_solved(self) -> None:
+        self.solutionfile.chmod(0o444)
+
 
 class HandledError(RuntimeError):
     ...
@@ -176,3 +184,18 @@ def get_selections(dayparts: list[DayPart], args: SelectionArgs) -> list[DayPart
 def get_cookie_headers() -> dict[str, str]:
     session_file = get_rootdir() / ".session"
     return {"Cookie": f"session={session_file.read_text().strip()}"}
+
+
+class Color(Enum):
+    RedText = 31
+    GreenText = 32
+    YellowText = 33
+    BlueText = 34
+
+    RedBack = 41
+    GreenBack = 42
+    YellowBack = 43
+    BlueBack = 44
+
+    def format(self, text: str) -> str:
+        return f"\033[{self.value}m{text}\033[0m"
