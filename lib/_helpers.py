@@ -113,7 +113,10 @@ class DayPart(NamedTuple):
         Add to set of locally saved previous guesses.
         Returns True/False if guess is new/old.
         """
-        guessfile_contents = self.guessfile.read_text()
+        try:
+            guessfile_contents = self.guessfile.read_text()
+        except FileNotFoundError:
+            guessfile_contents = ""
         prev_guesses = set(guessfile_contents.splitlines())
         if value in prev_guesses:
             return False

@@ -4,7 +4,6 @@ from collections.abc import Callable
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from . import submit
 from ._helpers import Color
 from ._helpers import DayPart
 from ._helpers import get_all_dayparts
@@ -63,7 +62,8 @@ def run_selections(selections: list[DayPart]) -> int:
                     if dp.add_guess(str(result)):
                         dp.solutionfile.write_text(str(result))
                         print(f"{Color.BlueText.format(f"{result = }, duration = {duration}")} 🚀")
-                        rtc |= submit.submit_daypart(dp)
+                        from .submit import submit_daypart
+                        rtc |= submit_daypart(dp)
                     else:
                         print(f"{Color.RedText.format(f"{result = }, duration = {duration}")} ❌")
                         rtc |= 1

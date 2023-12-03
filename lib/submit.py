@@ -13,7 +13,6 @@ from ._helpers import DayPart
 from ._helpers import get_all_dayparts
 from ._helpers import get_cookie_headers
 from ._helpers import get_year
-from .run import run_selections
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -42,6 +41,7 @@ def submit_daypart(dp: DayPart) -> int:
 
     if dp.solutionfile.stat().st_mtime < dp.pyfile.stat().st_mtime:
         print("solution has been modified, executing `run` again ...")
+        from .run import run_selections
         if rtc := run_selections([dp]):
             return rtc
 
