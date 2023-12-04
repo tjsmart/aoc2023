@@ -1,3 +1,5 @@
+import pytest
+
 from ..parser import collect_block_lines
 from ..parser import collect_block_statements
 from ..parser import collect_lines
@@ -77,3 +79,35 @@ def test_point_mod():
 
     assert p % (4, 5) == (3, 0)
     assert p % 4 == (3, 2)
+
+
+@pytest.mark.parametrize(
+    'other', [(0, -2), (2, -2), (1, -1), (1, -3), (0, -1), (0, -3), (2, -1), (2, -3)], ids=repr
+)
+def test_is_adjacent_to_true_cases(other):
+    p = Point(1, -2)
+    assert p.is_adjacent_to(other)
+
+
+@pytest.mark.parametrize(
+    'other', [(1, -2), (-1, -2), (3, -2), (1, 0), (1, -4)], ids=repr
+)
+def test_is_adjacent_to_false_cases(other):
+    p = Point(1, -2)
+    assert not p.is_adjacent_to(other)
+
+
+def test_iter_neighbors():
+    p = Point(1, -2)
+    expected_neighbors = {(0, -2), (2, -2), (1, -1), (1, -3), (0, -1), (0, -3), (2, -1), (2, -3)}
+
+    observed_neighbors = set(p.iter_neighbors())
+    assert observed_neighbors == expected_neighbors
+
+
+def test_iter_neighbors_no_diagonals():
+    p = Point(1, -2)
+    expected_neighbors = {(0, -2), (2, -2), (1, -1), (1, -3)}
+
+    observed_neighbors = set(p.iter_neighbors(diagonals=False))
+    assert observed_neighbors == expected_neighbors

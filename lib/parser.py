@@ -3,6 +3,8 @@ from __future__ import annotations
 import operator
 from collections.abc import Callable
 from collections.abc import Iterable
+from collections.abc import Iterator
+from collections.abc import Sequence
 from typing import NamedTuple
 from typing import overload
 
@@ -143,8 +145,16 @@ class Point(NamedTuple):
     def is_adjacent_to(self, other: tuple[int, int]) -> bool:
         dx = self.x - other[0]
         dy = self.y - other[1]
-        return abs(dx) <= 1 and abs(dy) <= 1
+        return bool(dx or dy) and abs(dx) <= 1 and abs(dy) <= 1
 
+    def iter_neighbors(self, diagonals: bool = True) -> Iterator[Point]:
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                if not diagonals and abs(dx) == abs(dy) == 1:
+                    continue
+                if dx == dy == 0:
+                    continue
+                yield self + (dx, dy)
 
 def _point_operation(
     point: Point,
