@@ -11,6 +11,9 @@ from argparse import ArgumentParser
 from collections.abc import Sequence
 from datetime import datetime
 from datetime import timedelta
+from datetime import timezone
+from datetime import UTC
+from itertools import cycle
 from pathlib import Path
 from typing import NoReturn
 
@@ -41,29 +44,36 @@ def _main() -> None:
     year = get_year()
     prev, next = _get_prev_and_next()
 
-    _check_if_ready(year, next)
+    _check_if_ready(year, next.day)
 
     create_next_files(year, next, prev)
     _open(next)
 
 
-def _check_if_ready(year: int, next: DayPart) -> None:
-    released_at = datetime(year=year, month=12, day=next.day, hour=0)
-    while True:
-        estnow = datetime.utcnow() - timedelta(hours=5)
-        time_to_wait = released_at - estnow
-        if time_to_wait.total_seconds() < 5:
-            return
+def _check_if_ready(year: int, day: int) -> None:
+    released_at = datetime(year=year, month=12, day=day, hour=0, tzinfo=timezone(timedelta(hours=-5)))
+    spinner = cycle(['⣾', '⣷', '⣯', '⣟', '⡿', '⢿', '⣻', '⣽'])
+    try:
+        while True:
+            now = datetime.now(UTC)
+            time_to_wait = released_at - now
+            if time_to_wait.total_seconds() < 5:
+                print()
+                return
 
-        if time_to_wait >= timedelta(hours=1):
-            hours_to_wait = time_to_wait.total_seconds() / (60 * 60)
-            raise HandledError(
-                f"Still have a long time to wait: {hours_to_wait:.1f} hours"
-            )
+            if time_to_wait >= timedelta(hours=1):
+                hours_to_wait = time_to_wait.total_seconds() / (60 * 60)
+                raise HandledError(
+                    f"Still have a long time to wait: {hours_to_wait:.1f} hours"
+                )
 
-        wait_str = _format_timedelta(time_to_wait)
-        print(f"waiting for the next input to go live! {wait_str}", end="\r")
-        time.sleep(1)
+            wait_str = _format_timedelta(time_to_wait)
+            spinner_icon = next(spinner)
+            print(f"\rwaiting for the next input to go live! {wait_str} {spinner_icon}", end="")
+            time.sleep(0.1)
+
+    except KeyboardInterrupt:
+        raise SystemExit()
 
 
 def _format_timedelta(td: timedelta) -> str:
