@@ -99,7 +99,7 @@ class DayPart(NamedTuple):
         return _EMOJI_LIST[self.day]
 
     def is_solved(self) -> bool:
-        return not os.access(self.solutionfile, os.W_OK)
+        return self.solutionfile.exists() and not os.access(self.solutionfile, os.W_OK)
 
     def mark_solved(self) -> None:
         self.solutionfile.chmod(0o444)
