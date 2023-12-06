@@ -4,7 +4,6 @@ import operator
 from collections.abc import Callable
 from collections.abc import Iterable
 from collections.abc import Iterator
-from collections.abc import Sequence
 from typing import NamedTuple
 from typing import overload
 
