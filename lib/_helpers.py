@@ -114,15 +114,20 @@ class DayPart(NamedTuple):
         Returns True/False if guess is new/old.
         """
         try:
-            guessfile_contents = self.guessfile.read_text()
+            guessfile_contents = self.guessfile.read_text().strip()
         except FileNotFoundError:
-            guessfile_contents = ""
-        prev_guesses = set(guessfile_contents.splitlines())
-        if value in prev_guesses:
-            return False
-        else:
-            self.guessfile.write_text(f"{guessfile_contents}\n{value}")
+            self.guessfile.write_text(f"{value}\n")
             return True
+
+        if not guessfile_contents:
+            self.guessfile.write_text(f"{value}\n")
+            return True
+
+        if value in set(guessfile_contents.splitlines()):
+            return False
+
+        self.guessfile.write_text(f"{guessfile_contents}\n{value}\n")
+        return True
 
 
 class HandledError(RuntimeError):
