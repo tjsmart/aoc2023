@@ -3,7 +3,7 @@ from itertools import cycle
 
 
 def solution(s: str) -> int:
-    instructions_s, map_s = s.split('\n\n')
+    instructions_s, map_s = s.split("\n\n")
     map_ = dict(parse_line(line) for line in map_s.splitlines())
 
     ats = [k for k in map_ if k.endswith("A")]
@@ -23,8 +23,8 @@ def solution(s: str) -> int:
 
 
 def parse_line(line: str) -> tuple[str, tuple[str, str]]:
-    k, v_s = line.split(' = ')
-    values = tuple(v_s[1:-1].split(', '))
+    k, v_s = line.split(" = ")
+    values = tuple(v_s[1:-1].split(", "))
     return k, values
 
 

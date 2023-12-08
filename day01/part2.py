@@ -42,7 +42,7 @@ def find_first(s: str) -> int:
             first_idx = idx
             first_value = value
 
-    assert first_value is not None,s
+    assert first_value is not None, s
 
     return first_value
 
@@ -71,23 +71,21 @@ def find_last(s: str) -> int:
     return last_value
 
 
-
-
 class Test:
     import pytest
 
     @pytest.mark.parametrize(
-            ("case", "expected"),
-            [
-                ("two1nine", 29),
-                ("eightwothree", 83),
-                ("abcone2threexyz", 13),
-                ("xtwone3four", 24),
-                ("4nineeightseven2", 42),
-                ("zoneight234", 14),
-                ("7pqrstsixteen",76),
-                (
-                    """\
+        ("case", "expected"),
+        [
+            ("two1nine", 29),
+            ("eightwothree", 83),
+            ("abcone2threexyz", 13),
+            ("xtwone3four", 24),
+            ("4nineeightseven2", 42),
+            ("zoneight234", 14),
+            ("7pqrstsixteen", 76),
+            (
+                """\
 two1nine
 eightwothree
 abcone2threexyz
@@ -95,28 +93,30 @@ xtwone3four
 4nineeightseven2
 zoneight234
 7pqrstsixteen
-""", 281),
-                ("one",11),
-                ("two",22),
-                ("three",33),
-                ("four",44),
-                ("five",55),
-                ("six",66),
-                ("seven",77),
-                ("eight",88),
-                ("nine",99),
-                ("1",11),
-                ("2",22),
-                ("3",33),
-                ("4",44),
-                ("5",55),
-                ("6",66),
-                ("7",77),
-                ("8",88),
-                ("9",99),
-                ("98765",95),
-                ("1989",19),
-                ],
-            )
+""",
+                281,
+            ),
+            ("one", 11),
+            ("two", 22),
+            ("three", 33),
+            ("four", 44),
+            ("five", 55),
+            ("six", 66),
+            ("seven", 77),
+            ("eight", 88),
+            ("nine", 99),
+            ("1", 11),
+            ("2", 22),
+            ("3", 33),
+            ("4", 44),
+            ("5", 55),
+            ("6", 66),
+            ("7", 77),
+            ("8", 88),
+            ("9", 99),
+            ("98765", 95),
+            ("1989", 19),
+        ],
+    )
     def test_examples(self, case, expected):
         assert solution(case) == expected

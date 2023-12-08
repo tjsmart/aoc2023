@@ -9,20 +9,21 @@ from lib import collect_lines
 
 
 card_name_to_value = {
-        "A": 13,
-        "K": 12,
-        "Q": 11,
-        "J": 10,
-        "T": 9,
-        "9": 8,
-        "8": 7,
-        "7": 6,
-        "6": 5,
-        "5": 4,
-        "4": 3,
-        "3": 2,
-        "2": 1,
+    "A": 13,
+    "K": 12,
+    "Q": 11,
+    "J": 10,
+    "T": 9,
+    "9": 8,
+    "8": 7,
+    "7": 6,
+    "6": 5,
+    "5": 4,
+    "4": 3,
+    "3": 2,
+    "2": 1,
 }
+
 
 @dataclass(order=True)
 class Hand:
@@ -81,16 +82,19 @@ class Test:
     import pytest
 
     @pytest.mark.parametrize(
-            ("case", "expected"),
-            [
-                ("""\
+        ("case", "expected"),
+        [
+            (
+                """\
 32T3K 765
 T55J5 684
 KK677 28
 KTJJT 220
 QQQJA 483
-""", 6440),
-                ],
-            )
+""",
+                6440,
+            ),
+        ],
+    )
     def test_examples(self, case, expected):
         assert solution(case) == expected

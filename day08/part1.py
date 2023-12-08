@@ -1,12 +1,8 @@
-from dataclasses import dataclass
 from itertools import cycle
-
-from lib import collect_lines
-
 
 
 def solution(s: str) -> int:
-    instructions_s, map_s = s.split('\n\n')
+    instructions_s, map_s = s.split("\n\n")
     instructions = cycle(map(lambda x: {"L": 0, "R": 1}[x], instructions_s))
     map_ = dict(parse_line(line) for line in map_s.splitlines())
 
@@ -21,9 +17,10 @@ def solution(s: str) -> int:
 
 
 def parse_line(line: str) -> tuple[str, tuple[str, str]]:
-    k, v_s = line.split(' = ')
-    values = tuple(v_s[1:-1].split(', '))
+    k, v_s = line.split(" = ")
+    values = tuple(v_s[1:-1].split(", "))
     return k, values
+
 
 class Test:
     import pytest
@@ -45,13 +42,16 @@ ZZZ = (ZZZ, ZZZ)
         ("case", "expected"),
         [
             (EXAMPLE_INPUT, EXPECTED_RESULT),
-            ("""\
+            (
+                """\
 LLR
 
 AAA = (BBB, BBB)
 BBB = (AAA, ZZZ)
 ZZZ = (ZZZ, ZZZ)
-""", 6),
+""",
+                6,
+            ),
         ],
     )
     def test_examples(self, case, expected):

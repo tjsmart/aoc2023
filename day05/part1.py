@@ -4,6 +4,7 @@ from typing import Self
 
 from lib import collect_block_statements
 
+
 @dataclass
 class Range:
     dst_r: int
@@ -30,6 +31,7 @@ class Map:
     def add(self, dst_r: int, src_r: int, r_len: int) -> None:
         self.ranges.append(Range(dst_r, src_r, r_len))
 
+
 @dataclass
 class Almanac:
     seeds: list[int]
@@ -37,8 +39,8 @@ class Almanac:
 
     @classmethod
     def from_str(cls, s: str) -> Self:
-        seed_str, s = s.split('\n\n', 1)
-        seeds = list(map(int, seed_str.split(':')[1].strip().split()))
+        seed_str, s = s.split("\n\n", 1)
+        seeds = list(map(int, seed_str.split(":")[1].strip().split()))
         maps = collect_block_statements(s, parse_map_block)
         return cls(seeds, maps)
 
@@ -68,13 +70,15 @@ def parse_map_block(s: str) -> Map:
 
     return map_
 
+
 class Test:
     import pytest
 
     @pytest.mark.parametrize(
-            ("case", "expected"),
-            [
-                ("""\
+        ("case", "expected"),
+        [
+            (
+                """\
 seeds: 79 14 55 13
 
 seed-to-soil map:
@@ -108,8 +112,10 @@ temperature-to-humidity map:
 humidity-to-location map:
 60 56 37
 56 93 4
-""", 35),
-                ],
-            )
+""",
+                35,
+            ),
+        ],
+    )
     def test_examples(self, case, expected):
         assert solution(case) == expected

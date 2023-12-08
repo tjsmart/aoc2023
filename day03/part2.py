@@ -18,7 +18,6 @@ def solution(s: str) -> int:
     ngroups: list[list[Point]] = []
     gears: list[Point] = []
 
-
     for j in range(len(grid)):
         for i in range(len(grid[0])):
             point = Point(i, j)
@@ -29,7 +28,7 @@ def solution(s: str) -> int:
                     ngroups[-1].append(point)
                 else:
                     ngroups.append([point])
-            elif c == '*':
+            elif c == "*":
                 gears.append(point)
 
     # nothing confusing going on here at all....
@@ -39,7 +38,6 @@ def solution(s: str) -> int:
         for ngroup in ngroups:
             if any(point.is_adjacent_to(gear) for point in ngroup):
                 hits.append(ngroup)
-
 
         if len(hits) == 2:
             true_gears.append(hits)
@@ -59,18 +57,19 @@ def calculate_gear_ratio(gear: list[list[Point]], grid: list[list[str]]) -> int:
 
     return ratio
 
+
 def get_int_value(ngroup: list[Point], grid: list[list[str]]) -> int:
     return int("".join(grid[point.y][point.x] for point in ngroup))
-
 
 
 class Test:
     import pytest
 
     @pytest.mark.parametrize(
-            ("case", "expected"),
-            [
-                ("""\
+        ("case", "expected"),
+        [
+            (
+                """\
 467..114..
 ...*......
 ..35..633.
@@ -81,8 +80,10 @@ class Test:
 ......755.
 ...$.*....
 .664.598..
-""", 467835),
-                ],
-            )
+""",
+                467835,
+            ),
+        ],
+    )
     def test_examples(self, case, expected):
         assert solution(case) == expected

@@ -1,14 +1,11 @@
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from lib import collect_lines
 
 @dataclass
 class Race:
     time: int
     duration: int
-
-
 
 
 def solution(s: str) -> int:
@@ -18,10 +15,11 @@ def solution(s: str) -> int:
 
 def parse(s: str) -> list[Race]:
     timestr, durationstr = s.splitlines()
-    times = list(map(int, timestr.split(':')[1].strip().split()))
-    durations = list(map(int, durationstr.split(':')[1].strip().split()))
+    times = list(map(int, timestr.split(":")[1].strip().split()))
+    durations = list(map(int, durationstr.split(":")[1].strip().split()))
 
     return [Race(time, duration) for time, duration in zip(times, durations)]
+
 
 def number_of_ways_to_win(race: Race) -> int:
     i = 1
@@ -46,17 +44,21 @@ def product(values: Iterable[int]) -> int:
         p *= value
     return p
 
+
 class Test:
     import pytest
 
     @pytest.mark.parametrize(
-            ("case", "expected"),
-            [
-                ("""\
+        ("case", "expected"),
+        [
+            (
+                """\
 Time:   7 15  30
 Distance: 9 40 200
-""", 288),
-                ],
-            )
+""",
+                288,
+            ),
+        ],
+    )
     def test_examples(self, case, expected):
         assert solution(case) == expected

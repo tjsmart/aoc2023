@@ -23,6 +23,7 @@ class Range:
             return self.src_r + value - self.dst_r
         return value
 
+
 @dataclass
 class Map:
     name: str
@@ -60,8 +61,8 @@ class Almanac:
 
     @classmethod
     def from_str(cls, s: str) -> Self:
-        seed_str, s = s.split('\n\n', 1)
-        pairs = batched(map(int, seed_str.split(':')[1].strip().split()), 2)
+        seed_str, s = s.split("\n\n", 1)
+        pairs = batched(map(int, seed_str.split(":")[1].strip().split()), 2)
         seed_ranges = list(map(lambda pair: SeedRange(*pair), pairs))
         maps = collect_block_statements(s, parse_map_block)
         return cls(seed_ranges, maps)
@@ -72,7 +73,6 @@ class Almanac:
                 return location_number
 
         assert False, "Failed to find the lowest location number!"
-
 
     def is_valid_location_number(self, location_number: int) -> bool:
         value = location_number
@@ -103,6 +103,7 @@ def parse_map_block(s: str) -> Map:
         map_.add(dst_r, src_r, r_len)
 
     return map_
+
 
 class Test:
     import pytest
@@ -144,14 +145,13 @@ humidity-to-location map:
 """
 
     @pytest.mark.parametrize(
-            ("case", "expected"),
-            [(EXAMPLE_INPUT, 46)],
-            )
+        ("case", "expected"),
+        [(EXAMPLE_INPUT, 46)],
+    )
     def test_examples(self, case, expected):
         assert solution(case) == expected
 
-
-    @pytest.mark.parametrize("seed", chain(range(79, 79+14), range(55, 55+13)))
+    @pytest.mark.parametrize("seed", chain(range(79, 79 + 14), range(55, 55 + 13)))
     def test_is_valid_seed_number(self, seed):
         almanac = Almanac.from_str(self.EXAMPLE_INPUT)
 

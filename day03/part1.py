@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from typing import Self
 
-from lib import collect_lines
 from lib import Point
 
 
@@ -36,8 +35,6 @@ def solution(s: str) -> int:
             else:
                 # assume it is a symbol
                 symbols.append(point)
-
-    # print(ngroups, symbols)
 
     all_hits = []
     for symbol in symbols:

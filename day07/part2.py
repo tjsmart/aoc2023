@@ -10,19 +10,19 @@ from lib import collect_lines
 
 
 card_name_to_value = {
-        "A": 13,
-        "K": 12,
-        "Q": 11,
-        "T": 9,
-        "9": 8,
-        "8": 7,
-        "7": 6,
-        "6": 5,
-        "5": 4,
-        "4": 3,
-        "3": 2,
-        "2": 1,
-        "J": 0,
+    "A": 13,
+    "K": 12,
+    "Q": 11,
+    "T": 9,
+    "9": 8,
+    "8": 7,
+    "7": 6,
+    "6": 5,
+    "5": 4,
+    "4": 3,
+    "3": 2,
+    "2": 1,
+    "J": 0,
 }
 
 
@@ -54,6 +54,7 @@ def solution(s: str) -> int:
     scores = [(score(hand), hand) for hand in hands]
     scores.sort()
     return sum(i * hand.bid for i, (_, hand) in enumerate(scores, 1))
+
 
 def score(hand: Hand) -> Score:
     unique = Counter(hand.cards)
@@ -101,16 +102,19 @@ class Test:
     import pytest
 
     @pytest.mark.parametrize(
-            ("case", "expected"),
-            [
-                ("""\
+        ("case", "expected"),
+        [
+            (
+                """\
 32T3K 765
 T55J5 684
 KK677 28
 KTJJT 220
 QQQJA 483
-""", 5905),
-                ],
-            )
+""",
+                5905,
+            ),
+        ],
+    )
     def test_examples(self, case, expected):
         assert solution(case) == expected

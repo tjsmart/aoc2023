@@ -26,9 +26,9 @@ class Game:
 
     @classmethod
     def from_str(cls, s) -> Self:
-        game_str, s = s.split(':')
+        game_str, s = s.split(":")
         ID = int(game_str.split()[1])
-        grabs = list(map(parse_grab, s.split(';')))
+        grabs = list(map(parse_grab, s.split(";")))
         return cls(ID, grabs)
 
     def is_valid(self) -> bool:
@@ -39,30 +39,31 @@ class Game:
         return True
 
 
-
 def parse_grab(s: str) -> grab:
     grab = {}
-    for x in s.split(','):
+    for x in s.split(","):
         count, color = x.strip().split()
         grab[color] = int(count)
     return grab
-
 
 
 class Test:
     import pytest
 
     @pytest.mark.parametrize(
-            ("case", "expected"),
-            [
-                ("""\
+        ("case", "expected"),
+        [
+            (
+                """\
 Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
 Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
 Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
 Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
 Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
-""", 8),
-                ],
-            )
+""",
+                8,
+            ),
+        ],
+    )
     def test_examples(self, case, expected):
         assert solution(case) == expected
