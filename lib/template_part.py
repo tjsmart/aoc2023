@@ -1,22 +1,24 @@
+from dataclasses import dataclass
+
 from lib import collect_lines
 
 
 def solution(s: str) -> int:
-    return sum(collect_lines(s, parse))
+    things = collect_lines(s, Thing.from_str)
 
-
-def parse(s: str) -> int:
-    ...
 
 class Test:
     import pytest
 
+    EXAMPLE_INPUT = """\
+"""
+    EXPECTED_RESULT = 0
+
     @pytest.mark.parametrize(
-            ("case", "expected"),
-            [
-                ("""\
-""", 123),
-                ],
-            )
+        ("case", "expected"),
+        [
+            (EXAMPLE_INPUT, EXPECTED_RESULT),
+        ],
+    )
     def test_examples(self, case, expected):
         assert solution(case) == expected
