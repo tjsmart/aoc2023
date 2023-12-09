@@ -1,97 +1,136 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from dataclasses import field
 from itertools import batched
-from itertools import chain
 from typing import Self
 
 from lib import collect_block_statements
 
 
 @dataclass
-class Range:
-    dst_r: int
-    src_r: int
-    r_len: int
-
-    def get(self, key: int) -> int:
-        if self.src_r <= key <= self.src_r + self.r_len:
-            return self.dst_r + key - self.src_r
-        return key
-
-    def inv_get(self, value: int) -> int:
-        if self.dst_r <= value <= self.dst_r + self.r_len:
-            return self.src_r + value - self.dst_r
-        return value
-
-
-@dataclass
-class Map:
-    name: str
-    ranges: list[Range] = field(default_factory=list)
-
-    def get(self, key: int) -> int:
-        for r in self.ranges:
-            if (value := r.get(key)) != key:
-                return value
-        return key
-
-    def inv_get(self, value: int) -> int:
-        for r in self.ranges:
-            if (key := r.inv_get(value)) != value:
-                return key
-        return value
-
-    def add(self, dst_r: int, src_r: int, r_len: int) -> None:
-        self.ranges.append(Range(dst_r, src_r, r_len))
-
-
-@dataclass
-class SeedRange:
-    start: int
-    length: int
-
-    def __contains__(self, key: int) -> int:
-        return self.start <= key < self.start + self.length
-
-
-@dataclass
 class Almanac:
-    seed_ranges: list[SeedRange]
+    seeds: list[Range]
     maps: list[Map]
 
     @classmethod
     def from_str(cls, s: str) -> Self:
         seed_str, s = s.split("\n\n", 1)
         pairs = batched(map(int, seed_str.split(":")[1].strip().split()), 2)
-        seed_ranges = list(map(lambda pair: SeedRange(*pair), pairs))
+        seeds = list(map(lambda pair: Range(*pair), pairs))
         maps = collect_block_statements(s, parse_map_block)
-        return cls(seed_ranges, maps)
+        return cls(seeds, maps)
 
-    def get_min_location_number(self) -> int:
-        for location_number in range(1, 1_000_000_000):
-            if self.is_valid_location_number(location_number):
-                return location_number
 
-        assert False, "Failed to find the lowest location number!"
+@dataclass
+class Map:
+    name: str
+    entries: list[MapEntry] = field(default_factory=list)
 
-    def is_valid_location_number(self, location_number: int) -> bool:
-        value = location_number
-        for map in reversed(self.maps):
-            value = map.inv_get(value)
+    def sort_on_src(self, reverse: bool = False) -> list[MapEntry]:
+        return sorted(
+            self.entries, key=lambda entry: (entry.src, entry.dst), reverse=reverse
+        )
 
-        return any(value in seed_range for seed_range in self.seed_ranges)
+    def sort_on_dst(self, reverse: bool = False) -> list[MapEntry]:
+        return sorted(
+            self.entries, key=lambda entry: (entry.dst, entry.src), reverse=reverse
+        )
 
-    def get_location_number(self, seed: int) -> int:
-        value = seed
-        for map in self.maps:
-            value = map.get(value)
 
-        return value
+@dataclass(order=True)
+class MapEntry:
+    src: Range
+    dst: Range
+
+    def get(self, key: int) -> int:
+        if self.src.start <= key <= self.src.end:
+            return self.dst.start + key - self.src.start
+        return key
+
+
+@dataclass(order=True)
+class Range:
+    start: int
+    length: int
+
+    @property
+    def end(self) -> int:
+        return self.start + self.length - 1
+
+    def __contains__(self, key: int) -> int:
+        return self.start <= key < self.start + self.length
+
+
+def overlap(a: Range, b: Range) -> tuple[int, int]:
+    """
+    a.start                  a.end
+    |                        |
+
+            |  -- overlap -- |
+            |                      |
+            b.start                b.end
+    """
+    start = max(a.start, b.start)
+    end = min(a.end, b.end)
+    # if end < start, there is no overlap
+    return start, end
+
+
+def map_items(items: list[Range], map_: Map) -> list[Range]:
+    items = sorted(items, reverse=True)
+    entries = map_.sort_on_src(reverse=True)
+
+    assert items and entries
+    entry = entries.pop()
+    mapped: list[Range] = []
+    while items:
+        item = items.pop()
+
+        if item.end < entry.src.start:
+            mapped.append(item)
+            continue
+
+        if item.start > entry.src.end:
+            items.append(item)
+            try:
+                entry = entries.pop()
+            except IndexError:
+                break
+            else:
+                continue
+
+        # there is overlap
+        ds = entry.src.start - item.start
+        de = item.end - entry.src.end
+        if ds > 0:
+            # non-overlapping portion at start is not mappable
+            mapped.append(Range(item.start, ds))
+            ds = 0
+
+        if de > 0:
+            # non-overlapping portion at end may be mappable by next entry
+            items.append(Range(item.end - de + 1, de))
+            de = 0
+
+        start, end = overlap(item, entry.src)
+        length = end - start + 1
+        mapped_start = entry.get(start)
+        mapped.append(Range(mapped_start, length))
+
+    # add any remaining items that could not be mapped
+    mapped.extend(items)
+
+    return mapped
 
 
 def solution(s: str) -> int:
     almanac = Almanac.from_str(s)
-    return almanac.get_min_location_number()
+    items = almanac.seeds
+    for map_ in almanac.maps:
+        items = map_items(items, map_)
+
+    return min(items).start
 
 
 def parse_map_block(s: str) -> Map:
@@ -99,8 +138,13 @@ def parse_map_block(s: str) -> Map:
     name, lines = lines[0].split()[0], lines[1:]
     map_ = Map(name)
     for line in lines:
-        dst_r, src_r, r_len = map(int, line.split())
-        map_.add(dst_r, src_r, r_len)
+        dst_start, src_start, length = map(int, line.split())
+        map_.entries.append(
+            MapEntry(
+                dst=Range(dst_start, length),
+                src=Range(src_start, length),
+            )
+        )
 
     return map_
 
@@ -150,10 +194,3 @@ humidity-to-location map:
     )
     def test_examples(self, case, expected):
         assert solution(case) == expected
-
-    @pytest.mark.parametrize("seed", chain(range(79, 79 + 14), range(55, 55 + 13)))
-    def test_is_valid_seed_number(self, seed):
-        almanac = Almanac.from_str(self.EXAMPLE_INPUT)
-
-        location_number = almanac.get_location_number(seed)
-        assert almanac.is_valid_location_number(location_number)
