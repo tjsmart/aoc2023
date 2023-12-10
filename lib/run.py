@@ -22,6 +22,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--days", type=int, action="append")
     parser.add_argument("--parts", type=int, action="append")
     parser.add_argument("--test", default=False, action="store_true")
+    parser.add_argument("--count", type=int, default=1)
 
     args, other_args = parser.parse_known_args(argv, namespace=_Args())
     dayparts = get_all_dayparts()
@@ -30,20 +31,36 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.test:
         return _test_selections(selections, other_args)
     else:
-        return run_selections(selections)
+        return run_selections(selections, count=args.count)
 
 
-def run_selections(selections: list[DayPart]) -> int:
+def run_selections(selections: list[DayPart], *, count: int = 1) -> int:
+    if count <= 0:
+        raise ValueError(f"count must be positive, provided: {count}")
+
     rtc = 0
     for dp in selections:
         input = dp.inputfile.read_text()
         solution = dp.load_solution()
         print(f"{dp.emoji} ({dp.day:02}/{dp.part}) ➡️ ", end="")
-        result = time_it(solution, input)
+
+        total_time = 0
+        result = None
+        for _ in range(count):
+            result = time_it(solution, input)
+            if isinstance(result, Cancelled):
+                break
+
+            total_time += result.duration
+
+        assert result is not None
+        if isinstance(result, Finished):
+            result.duration = total_time // count
 
         match result:
             case Cancelled(duration):
-                print(f"{Color.YellowText.format(f"solution cancelled after {duration}")} 🛑")
+                dstr = _format_duration(duration)
+                print(f"{Color.YellowText.format(f"solution cancelled after {dstr}")} 🛑")
                 rtc |= 1
 
             case Finished(None, _):
@@ -51,21 +68,22 @@ def run_selections(selections: list[DayPart]) -> int:
                 rtc |= 1
 
             case Finished(result, duration):
+                dstr = _format_duration(duration)
                 if dp.is_solved():
                     correct = str(result) == dp.solutionfile.read_text()
                     if correct:
-                        print(f"{Color.GreenText.format(f"{result = }, duration = {duration}")} ✅")
+                        print(f"{Color.GreenText.format(f"{result = }, duration = {dstr}")} ✅")
                     else:
-                        print(f"{Color.RedText.format(f"{result = }, duration = {duration}")} ❌")
+                        print(f"{Color.RedText.format(f"{result = }, duration = {dstr}")} ❌")
                         rtc |= 1
                 else:
                     if dp.add_guess(str(result)):
                         dp.solutionfile.write_text(str(result))
-                        print(f"{Color.BlueText.format(f"{result = }, duration = {duration}")} 🚀")
+                        print(f"{Color.BlueText.format(f"{result = }, duration = {dstr}")} 🚀")
                         from .submit import submit_daypart
                         rtc |= submit_daypart(dp)
                     else:
-                        print(f"{Color.RedText.format(f"{result = }, duration = {duration}")} ❌")
+                        print(f"{Color.RedText.format(f"{result = }, duration = {dstr}")} ❌")
                         rtc |= 1
 
     return rtc
@@ -85,11 +103,11 @@ def _test_selections(
 @dataclass
 class Finished[R]:
     result: R | None
-    duration: str
+    duration: int
 
 @dataclass
 class Cancelled:
-    duration: str
+    duration: int
 
 type SolutionResult[R] = Finished[R] | Cancelled
 
@@ -102,12 +120,10 @@ def time_it[R, **P](
     try:
         result = solution(*args, **kwargs)
     except KeyboardInterrupt:
-        end = time.monotonic_ns()
-        duration = _format_duration(end - start)
+        duration = time.monotonic_ns() - start
         return Cancelled(duration)
 
-    end = time.monotonic_ns()
-    duration = _format_duration(end - start)
+    duration = time.monotonic_ns() - start
     return Finished(result, duration)
 
 
@@ -137,6 +153,7 @@ def _format_duration(duration_ns: int) -> str:
 @dataclass
 class _Args(SelectionArgs):
     test: bool = False
+    count: int = 1
 
 
 if __name__ == "__main__":
