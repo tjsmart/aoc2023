@@ -2,41 +2,28 @@ from lib import collect_lines
 from lib import Point
 
 
+
 def solution(s: str) -> int:
     grid = collect_lines(s, list)
+    loop = get_loop(grid)
+    return len(loop) // 2
+
+
+def get_loop(grid: list[list[str]]) -> list[Point]:
     start = get_starting_pos(grid)
+    first_step, *_ = get_moves(start, grid)
 
-    possible_first_steps = []
-    for m, cs in (
-        ((1, 0), ('J', '7', '-')),
-        ((-1, 0), ('L', 'F', '-')),
-        ((0, -1), ('F', '7', '|')),
-        ((0, 1), ('L', 'J', '|')),
-    ):
-        p = start + m
-        if grid[p.y][p.x] in cs:
-            possible_first_steps.append(p)
+    steps = [first_step]
+    moves = [move for move in get_moves(first_step, grid) if move != start]
+    step, = moves
 
+    while step != start:
+        steps.append(step)
+        moves = [move for move in get_moves(step, grid) if move != steps[-2]]
+        step, = moves
 
-    # for n in start.iter_neighbors(diagonals=False):
-    for n in possible_first_steps:
-        moves = get_moves(n, grid)
-        queue: list[tuple[list[Point], Point]] = [([n], pos) for pos in moves if pos != start]
-        while queue:
-            steps, pos = queue.pop()
-            if pos == start:
-                return (len(steps) + 1) // 2
-
-            steps.append(pos)
-            moves = get_moves(pos, grid)
-            if not moves:
-                # dead end
-                continue
-
-            queue.extend((steps, move) for move in moves if move not in steps)
-
-    assert False, "uh oh!"
-
+    steps.append(step)
+    return steps
 
 
 def get_starting_pos(grid: list[list[str]]) -> Point:
@@ -45,7 +32,6 @@ def get_starting_pos(grid: list[list[str]]) -> Point:
             if c == "S":
                 return Point(x, y)
     assert False, "Could not find S"
-
 
 
 def get_moves(p: Point, grid: list[list[str]]) -> list[Point]:
@@ -99,6 +85,18 @@ def get_moves(p: Point, grid: list[list[str]]) -> list[Point]:
                 moves.append(x)
             return moves
 
+        case 'S':
+            moves = []
+            if (x := can_move_up(p, grid)):
+                moves.append(x)
+            if (x := can_move_right(p, grid)):
+                moves.append(x)
+            if (x := can_move_down(p, grid)):
+                moves.append(x)
+            if (x := can_move_left(p, grid)):
+                moves.append(x)
+            return moves
+
         case _:
             return []
 
@@ -125,15 +123,6 @@ def can_move_left(p: Point, grid: list[list[str]]) -> Point | None:
 
 class Test:
     import pytest
-
-    EXAMPLE_INPUT = """\
-.....
-.F-7.
-.|.|.
-.L-J.
-.....
-"""
-    EXPECTED_RESULT = 0
 
     @pytest.mark.parametrize(
         ("case", "expected"),
