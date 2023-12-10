@@ -5,6 +5,7 @@ import logging
 import os
 import re
 import subprocess
+import sys
 import warnings
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -223,4 +224,7 @@ class Color(Enum):
     BlueBack = 44
 
     def format(self, text: str) -> str:
-        return f"\033[{self.value}m{text}\033[0m"  # ]]
+        if sys.stdout.isatty():
+            return f"\033[{self.value}m{text}\033[0m"  # ]]
+        else:
+            return text
