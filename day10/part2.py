@@ -18,7 +18,7 @@ rotate_left = {Point(0, -1): Point(-1, 0), Point(-1, 0): Point(0, 1), Point(0, 1
 def solution(s: str) -> int:
     grid = collect_lines(s, list)
     loop = get_loop(grid)
-    points_to_check = list({Point(x, y) for x in range(len(grid[0])) for y in range(len(grid))} - set(loop))
+    points_to_check = {Point(x, y) for x in range(len(grid[0])) for y in range(len(grid))} - set(loop)
 
     groups = {"left": Group([], True), "right": Group([], True)}
     # iterate every step along the loop
@@ -32,7 +32,7 @@ def solution(s: str) -> int:
                     continue
 
                 g = groups[k]
-                queue: list[Point] = [n]
+                queue: set[Point] = {n}
                 while queue:
                     p = queue.pop()
                     points_to_check.remove(p)
@@ -42,7 +42,7 @@ def solution(s: str) -> int:
                         if out_of_bounds(n, grid):
                             g.i = False
                         elif n in points_to_check and n not in queue:
-                            queue.append(n)
+                            queue.add(n)
 
     for g in groups.values():
         if g.i:
