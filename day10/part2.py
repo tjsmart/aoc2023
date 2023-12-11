@@ -6,12 +6,6 @@ from lib import collect_lines
 from lib import Point
 
 
-@dataclass
-class Group:
-    ps: list[Point]
-    i: bool
-
-
 rotate_right = {
     Point(0, -1): Point(1, 0),
     Point(1, 0): Point(0, 1),
