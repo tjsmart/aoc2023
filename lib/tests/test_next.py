@@ -58,7 +58,7 @@ def test_next_can_create_part1(rootdir, mock_input, mock_prompt):
 
     nextfile = rootdir / "day13" / "part1.py"
     assert nextfile.exists()
-    assert nextfile.read_text() == "day12 part2 contents"
+    assert "def solution" in nextfile.read_text()
 
     nextfile = rootdir / "day13" / "__init__.py"
     assert nextfile.exists()
