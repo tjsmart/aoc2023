@@ -1,34 +1,70 @@
 import itertools
-from dataclasses import dataclass
+from collections import deque
+from typing import Literal
 
-from .part1 import get_loop
+from .part1 import get_moves
+from .part1 import get_starting_pos
 from lib import collect_lines
 from lib import Point
 
 
-rotate_right = {
-    Point(0, -1): Point(1, 0),
-    Point(1, 0): Point(0, 1),
-    Point(0, 1): Point(-1, 0),
-    Point(-1, 0): Point(0, -1),
-}
-rotate_left = {
-    Point(0, -1): Point(-1, 0),
-    Point(-1, 0): Point(0, 1),
-    Point(0, 1): Point(1, 0),
-    Point(1, 0): Point(0, -1),
+rotate_dir_to_rotate_map = {
+    1: {
+        Point(0, -1): Point(1, 0),
+        Point(1, 0): Point(0, 1),
+        Point(0, 1): Point(-1, 0),
+        Point(-1, 0): Point(0, -1),
+    },
+    -1: {
+        Point(0, -1): Point(-1, 0),
+        Point(-1, 0): Point(0, 1),
+        Point(0, 1): Point(1, 0),
+        Point(1, 0): Point(0, -1),
+    },
 }
 
 
 def solution(s: str) -> int:
     grid = collect_lines(s, list)
-    loop = get_loop(grid)
+    loop, rd = get_loop(grid)
 
-    for rm in (rotate_left, rotate_right):
-        if gps := get_inside_points(rm, grid, loop):
-            return len(gps)
+    rm = rotate_dir_to_rotate_map[rd]
+    return len(get_inside_points(rm, grid, loop))
 
-    assert False, "uh oh! 🤷"
+
+def get_loop(grid: list[list[str]]) -> tuple[list[Point], Literal[1, -1]]:
+    start = get_starting_pos(grid)
+    first_step, *_ = get_moves(start, grid)
+
+    steps = [first_step]
+    moves = [move for move in get_moves(first_step, grid) if move != start]
+    (step,) = moves
+
+    rd = 0
+    direction = deque([step - first_step], maxlen=2)
+    while step != start:
+        steps.append(step)
+        moves = [move for move in get_moves(step, grid) if move != steps[-2]]
+        (step,) = moves
+        direction.append(step - steps[-1])
+        rd += rotation_dir(*direction)
+
+    steps.append(step)
+    return steps, sign(rd)
+
+
+def rotation_dir(a: Point, b: Point) -> int:
+    return 0 if a == b else 1 if R(a) == b else -1
+
+
+def R(a: Point) -> Point:
+    """90° ccw rotation"""
+    return Point(-a.y, a.x)
+
+
+def sign(x: int) -> Literal[1, -1]:
+    assert x
+    return 1 if x > 0 else -1
 
 
 def get_inside_points(
@@ -54,18 +90,10 @@ def get_inside_points(
                 gps.append(p)
 
                 for n in p.iter_neighbors(diagonals=False):
-                    if out_of_bounds(n, grid):
-                        # all points in this groups are 'outside'
-                        return []
-
-                    elif n in points_to_check and n not in queue:
+                    if n in points_to_check and n not in queue:
                         queue.add(n)
 
     return gps
-
-
-def out_of_bounds(p: Point, grid: list[list[str]]) -> bool:
-    return p.x < 0 or p.x >= len(grid[0]) or p.y < 0 or p.y >= len(grid)
 
 
 class Test:
@@ -146,6 +174,18 @@ L.L7LFJ|||||FJL7||LJ
 L7JLJL-JLJLJL--JLJ.L
 """,
                 10,
+            ),
+            (
+                """\
+S------7
+|F----7|
+||OOOO||
+||OOOO||
+|L-7F-J|
+|II||II|
+L--JL--J
+""",
+                4,
             ),
         ],
     )
