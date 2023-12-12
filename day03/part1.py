@@ -1,66 +1,45 @@
+import string
 from dataclasses import dataclass
-from typing import Self
+from dataclasses import field
 
+from lib import collect_lines
 from lib import Point
 
 
+symbols = ["#", "%", "&", "*", "+", "-", "/", "=", "@", "$"]
+
+
 @dataclass
-class Grid:
-    value: list[list[str]]
-
-    @classmethod
-    def from_str(cls, s) -> Self:
-        return Grid([list(line) for line in s.splitlines()])
-
-
+class Number:
+    s: list[str] = field(default_factory=list)
+    g: bool = False
 
 def solution(s: str) -> int:
-    grid = Grid.from_str(s).value
-    ngroups: list[list[Point]] = []
-    symbols: list[Point] = []
+    grid = collect_lines(s, list)
 
+    sum = 0
+    for y, row in enumerate(grid):
+        number = Number()
+        for x, c in enumerate(row):
+            if c in string.digits:
+                number.s.append(c)
+                if not number.g:
+                    number.g = find_gear(Point(x, y), grid)
 
-    for j in range(len(grid)):
-        for i in range(len(grid[0])):
-            point = Point(i, j)
-            c = grid[j][i]
-            if c == '.':
-                continue
-
-            if c.isnumeric():
-                if ngroups and immediately_follows(ngroups[-1], point):
-                    ngroups[-1].append(point)
-                else:
-                    ngroups.append([point])
             else:
-                # assume it is a symbol
-                symbols.append(point)
+                if number.g:
+                    sum += int(''.join(number.s))
 
-    all_hits = []
-    for symbol in symbols:
-        hits = []
-        for i, ngroup in enumerate(ngroups):
-            if any(point.is_adjacent_to(symbol) for point in ngroup):
-                hits.append(i)
+                number = Number()
 
-        all_hits.extend(ngroups[i] for i in hits)
-        for i in hits:
-            try:
-                ngroups.remove(i)
-            except ValueError:
-                pass
+        if number.g:
+            sum += int(''.join(number.s))
 
-    return sum(map(lambda ngroup: get_int_from_ngroup(ngroup, grid), all_hits))
+    return sum
 
 
-def immediately_follows(ngroup: list[Point], point: Point) -> bool:
-    # assume we only need to check if point is immediately to the right of previous point
-    return point.x == ngroup[-1].x + 1
-
-
-def get_int_from_ngroup(ngroup: list[Point], grid: list[list[str]]) -> int:
-    return int("".join(grid[point.y][point.x] for point in ngroup))
-
+def find_gear(p: Point, grid: list[list[str]]) -> bool:
+    return any(grid[n.y][n.x] in symbols for n in p.iter_neighbors() if 0 <= n.y < len(grid) and 0 <= n.x < len(grid[0]))
 
 
 class Test:
