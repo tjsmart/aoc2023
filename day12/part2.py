@@ -40,7 +40,7 @@ def calc(record: str, counts: tuple[int, ...]) -> int:
         if "." in batch or n == "#":
             continue
 
-        ars += calc(record[i + count + 1 :], counts[1:])
+        ars += calc(record[i + count + 1 :].lstrip('.'), counts[1:])
 
 
 def parse(line: str) -> tuple[str, tuple[int, ...]]:
