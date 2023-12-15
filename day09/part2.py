@@ -23,6 +23,7 @@ def predict(history: list[int]) -> int:
 
     return sum
 
+
 class Test:
     import pytest
 

@@ -9,7 +9,7 @@ def solution(s: str) -> int:
 
 def parse(line: str) -> tuple[str, tuple[int, ...]]:
     x, y = line.split()
-    return x, tuple(map(int, y.strip().split(',')))
+    return x, tuple(map(int, y.strip().split(",")))
 
 
 class Test:
@@ -34,16 +34,15 @@ class Test:
     def test_examples(self, case, expected):
         assert solution(case) == expected
 
-
     @pytest.mark.parametrize(
         ("case", "expected"),
         [
-(("???.###", (1,1,3)), 1),
-((".??..??...?##.", (1,1,3)), 4),
-(("?#?#?#?#?#?#?#?", (1,3,1,6)), 1),
-(("????.#...#...", (4,1,1)), 1),
-(("????.######..#####.", (1,6,5)), 4),
-(("?###????????", (3,2,1)), 10),
+            (("???.###", (1, 1, 3)), 1),
+            ((".??..??...?##.", (1, 1, 3)), 4),
+            (("?#?#?#?#?#?#?#?", (1, 3, 1, 6)), 1),
+            (("????.#...#...", (4, 1, 1)), 1),
+            (("????.######..#####.", (1, 6, 5)), 4),
+            (("?###????????", (3, 2, 1)), 10),
         ],
     )
     def test_example_by_line(self, case, expected):

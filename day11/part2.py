@@ -5,7 +5,7 @@ from lib import collect_lines
 from lib import Point
 
 
-def solution(s: str, factor: int=1000000) -> int:
+def solution(s: str, factor: int = 1000000) -> int:
     universe = collect_lines(s, list)
     erows = get_expanded_rows(universe)
     ecols = get_expanded_cols(universe)
@@ -18,7 +18,9 @@ def solution(s: str, factor: int=1000000) -> int:
     return sum
 
 
-def compute_distance(a: Point, b: Point, factor: int, erows: set[int], ecols: set[int]) -> int:
+def compute_distance(
+    a: Point, b: Point, factor: int, erows: set[int], ecols: set[int]
+) -> int:
     d = 0
     for x in range(a.x, b.x, sign(b.x - a.x)):
         if x in ecols:
@@ -49,11 +51,13 @@ def find_galaxies(universe: list[list[str]]) -> list[Point]:
 
 
 def get_expanded_rows(universe: list[list[str]]) -> set[int]:
-    return {i for i, row in enumerate(universe) if '#' not in row}
+    return {i for i, row in enumerate(universe) if "#" not in row}
 
 
 def get_expanded_cols(universe: list[list[str]]) -> set[int]:
-    return {i for i in range(len(universe[0])) if '#' not in (row[i] for row in universe)}
+    return {
+        i for i in range(len(universe[0])) if "#" not in (row[i] for row in universe)
+    }
 
 
 class Test:

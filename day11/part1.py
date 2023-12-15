@@ -21,7 +21,6 @@ def compute_distance(x: Point, y: Point) -> int:
     return abs(d.x) + abs(d.y)
 
 
-
 def find_galaxies(universe: list[list[str]]) -> list[Point]:
     gs = []
     for j in range(len(universe)):
@@ -34,14 +33,13 @@ def find_galaxies(universe: list[list[str]]) -> list[Point]:
 def expand(universe: list[list[str]]) -> None:
     irows: list[int] = []
     for i, row in enumerate(universe):
-        if '#' not in row:
+        if "#" not in row:
             irows.append(i)
 
     icols = []
     for i in range(len(universe[0])):
-        if '#' not in (row[i] for row in universe):
+        if "#" not in (row[i] for row in universe):
             icols.append(i)
-
 
     ner = 0
     for irow in irows:
@@ -84,7 +82,9 @@ class Test:
     def test_expanded(self):
         universe = collect_lines(self.EXAMPLE_INPUT, list)
         expand(universe)
-        assert "\n".join("".join(row) for row in universe) == """\
+        assert (
+            "\n".join("".join(row) for row in universe)
+            == """\
 ....#........
 .........#...
 #............
@@ -97,3 +97,4 @@ class Test:
 .............
 .........#...
 #....#......."""
+        )
