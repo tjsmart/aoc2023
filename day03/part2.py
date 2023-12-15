@@ -1,65 +1,75 @@
+import string
+from collections import defaultdict
 from dataclasses import dataclass
-from typing import Self
+from dataclasses import field
+from typing import Iterator
 
+from lib import collect_lines
 from lib import Point
+from lib import product
 
 
 @dataclass
-class Grid:
-    value: list[list[str]]
+class Number:
+    points: list[Point] = field(default_factory=list)
+    chars: list[str] = field(default_factory=list)
 
-    @classmethod
-    def from_str(cls, s) -> Self:
-        return Grid([list(line) for line in s.splitlines()])
+    def __bool__(self) -> bool:
+        return bool(self.points)
+
+    def __index__(self) -> int:
+        return int("".join(self.chars))
 
 
 def solution(s: str) -> int:
-    grid = Grid.from_str(s).value
-    ngroups: list[list[Point]] = []
-    gears: list[Point] = []
+    grid = collect_lines(s, list)
 
-    for j in range(len(grid)):
-        for i in range(len(grid[0])):
-            point = Point(i, j)
-            c = grid[j][i]
+    gear_candidates: dict[Point, list[int]] = defaultdict(list)
+    for y, row in enumerate(grid):
+        number = Number()
+        for x, c in enumerate(row):
+            if c in string.digits:
+                number.points.append(Point(x, y))
+                number.chars.append(c)
 
-            if c.isnumeric():
-                if ngroups and immediately_follows(ngroups[-1], point):
-                    ngroups[-1].append(point)
-                else:
-                    ngroups.append([point])
-            elif c == "*":
-                gears.append(point)
+            else:
+                if number:
+                    for gear in iter_gears(number.points, grid):
+                        gear_candidates[gear].append(int(number))
 
-    # nothing confusing going on here at all....
-    true_gears: list[list[list[Point]]] = []
-    for gear in gears:
-        hits: list[list[Point]] = []
-        for ngroup in ngroups:
-            if any(point.is_adjacent_to(gear) for point in ngroup):
-                hits.append(ngroup)
+                number = Number()
 
-        if len(hits) == 2:
-            true_gears.append(hits)
+        if number:
+            for gear in iter_gears(number.points, grid):
+                gear_candidates[gear].append(int(number))
 
-    return sum(map(lambda gear: calculate_gear_ratio(gear, grid), true_gears))
+    return sum(
+        product(numbers) for numbers in gear_candidates.values() if len(numbers) == 2
+    )
 
 
-def immediately_follows(ngroup: list[Point], point: Point) -> bool:
-    # assume we only need to check if point is immediately to the right of previous point
-    return point.x == ngroup[-1].x + 1
+def iter_gears(points: list[Point], grid: list[list[str]]) -> Iterator[Point]:
+    for n in iter_neighbors(points, grid):
+        if grid[n.y][n.x] == "*":
+            yield n
 
 
-def calculate_gear_ratio(gear: list[list[Point]], grid: list[list[str]]) -> int:
-    ratio = 1
-    for ngroup in gear:
-        ratio *= get_int_value(ngroup, grid)
+def iter_neighbors(points: list[Point], grid: list[list[str]]) -> Iterator[Point]:
+    if points[0].y > 0:
+        for x in range(points[0].x - 1, points[-1].x + 2):
+            if 0 <= x < len(grid[0]):
+                yield Point(x, points[0].y - 1)
 
-    return ratio
+    if points[0].x - 1 >= 0:
+        yield Point(points[0].x - 1, points[0].y)
 
+    if points[-1].x + 1 < len(grid[0]):
+        yield Point(points[-1].x + 1, points[0].y)
 
-def get_int_value(ngroup: list[Point], grid: list[list[str]]) -> int:
-    return int("".join(grid[point.y][point.x] for point in ngroup))
+    if points[0].y < len(grid) - 1:
+        for x in range(points[0].x - 1, points[-1].x + 2):
+            if 0 <= x < len(grid[0]):
+                yield Point(x, points[0].y + 1)
 
 
 class Test:

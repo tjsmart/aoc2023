@@ -14,6 +14,7 @@ class Number:
     s: list[str] = field(default_factory=list)
     g: bool = False
 
+
 def solution(s: str) -> int:
     grid = collect_lines(s, list)
 
@@ -28,27 +29,32 @@ def solution(s: str) -> int:
 
             else:
                 if number.g:
-                    sum += int(''.join(number.s))
+                    sum += int("".join(number.s))
 
                 number = Number()
 
         if number.g:
-            sum += int(''.join(number.s))
+            sum += int("".join(number.s))
 
     return sum
 
 
 def find_gear(p: Point, grid: list[list[str]]) -> bool:
-    return any(grid[n.y][n.x] in symbols for n in p.iter_neighbors() if 0 <= n.y < len(grid) and 0 <= n.x < len(grid[0]))
+    return any(
+        grid[n.y][n.x] in symbols
+        for n in p.iter_neighbors()
+        if 0 <= n.y < len(grid) and 0 <= n.x < len(grid[0])
+    )
 
 
 class Test:
     import pytest
 
     @pytest.mark.parametrize(
-            ("case", "expected"),
-            [
-                ("""\
+        ("case", "expected"),
+        [
+            (
+                """\
 467..114..
 ...*......
 ..35..633.
@@ -59,8 +65,10 @@ class Test:
 ......755.
 ...$.*....
 .664.598..
-""", 4361),
-                ],
-            )
+""",
+                4361,
+            ),
+        ],
+    )
     def test_examples(self, case, expected):
         assert solution(case) == expected
