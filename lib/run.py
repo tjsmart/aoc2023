@@ -72,9 +72,9 @@ def run_selections(selections: list[DayPart], *, count: int = 1) -> int:
                 if dp.is_solved():
                     correct = str(result) == dp.solutionfile.read_text()
                     if correct:
-                        print(f"{Color.GreenText.format(f"{result = }, duration = {dstr}")} ✅")
+                        print(f"{Color.GreenText.format(f"{result = :15d}, duration = {dstr:>8s}")} ✅")
                     else:
-                        print(f"{Color.RedText.format(f"{result = }, duration = {dstr}")} ❌")
+                        print(f"{Color.RedText.format(f"{result = :15d}, duration = {dstr:>8s}")} ❌")
                         rtc |= 1
                 else:
                     if dp.add_guess(str(result)):
@@ -141,7 +141,7 @@ def _format_duration(duration_ns: int) -> str:
             unit_str = "ms"
         case _:
             duration = duration_ns / (10**9)
-            unit_str = "s"
+            unit_str = " s"
 
             if duration >= 60:
                 duration = duration / 60
