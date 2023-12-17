@@ -14,6 +14,7 @@ from enum import Enum
 from functools import lru_cache
 from pathlib import Path
 from typing import NamedTuple
+from typing import Self
 
 
 logger = logging.getLogger("aoc.lib")
@@ -228,3 +229,16 @@ class Color(Enum):
             return f"\033[{self.value}m{text}\033[0m"  # ]]
         else:
             return text
+
+
+class Singleton:
+    __slots__ = ()
+    __instance = None
+
+    def __new__(cls: type[Self]) -> Self:
+        if cls.__instance is None:
+            cls.__instance = super().__new__(cls)
+        return cls.__instance
+
+    def __init__(self) -> None:
+        pass
