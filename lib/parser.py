@@ -4,8 +4,12 @@ import operator
 from collections.abc import Callable
 from collections.abc import Iterable
 from collections.abc import Iterator
+from collections.abc import Sequence
+from dataclasses import dataclass
+from typing import final
 from typing import NamedTuple
 from typing import overload
+from typing import SupportsIndex
 
 
 @overload
@@ -176,9 +180,95 @@ def _point_operation(
             f" {type(point).__name__!r} and {type(other).__name__!r}"
         )
 
+
+
+@final
+@dataclass(frozen=True)
+class FrozenGrid[T](Sequence[Sequence[T]]):
+    type Array = tuple[T, ...]
+    _grid: tuple[tuple[T]]
+
+    def iter_rows(self) -> Iterator[Array]:
+        yield from self._grid
+
+    def iter_rev_rows(self) -> Iterator[Array]:
+        yield from reversed(self._grid)
+
+    def iter_cols(self) -> Iterator[Array]:
+        yield from zip(*self._grid)
+
+    def iter_rev_cols(self) -> Iterator[Array]:
+        yield from zip(*reversed(self._grid))
+
+    def enum_rows(self) -> Iterator[tuple[int, Array]]:
+        yield from enumerate(self.iter_rows())
+
+    def enum_cols(self) -> Iterator[tuple[int, Array]]:
+        yield from enumerate(self.iter_cols())
+
+    def row_len(self) -> int:
+        return len(self)
+
+    def col_len(self) -> int:
+        return len(self[0])
+
+    def __getitem__(self, __key: SupportsIndex) -> Array:
+        return self._grid[__key]
+
+    def __len__(self) -> int:
+        return len(self._grid)
+
+    @classmethod
+    def from_iter(cls, grid: Iterable[Iterable[T]], /) -> FrozenGrid[T]:
+        return cls(tuple(tuple(row) for row in grid))
+
+    @overload
+    @classmethod
+    def from_str(cls, s: str) -> FrozenGrid[str]:
+        ...
+
+    @overload
+    @classmethod
+    def from_str(cls, s: str, p: Callable[[str], T]) -> FrozenGrid[T]:
+        ...
+
+    @classmethod
+    def from_str(cls, s: str, p: Callable[[str], T] |  None = None) -> FrozenGrid[T] | FrozenGrid[str]:
+        if p is None:
+            x = collect_lines(s, list)
+            return cls.from_iter(x)
+        else:
+            x = collect_lines(s, lambda x: list(map(p, x)))
+            return cls.from_iter(x)
+
+    def __repr__(self) -> str:
+        return '\n'.join("".join(str(c) for c in row) for row in self)
+
+    def transpose(self) -> FrozenGrid:
+        return FrozenGrid.from_iter(self.iter_cols())
+
+    def rotate(self, turns: int) -> FrozenGrid:
+        """rotate grid by 90° turns, +/- turns corresponds to ccw/cw rotation"""
+        match turns % 4:
+            case 0:
+                return FrozenGrid(self._grid)
+            case 1 | -3:
+                return FrozenGrid.from_iter(self.iter_rev_cols())
+            case 2 | -2:
+                return FrozenGrid.from_iter(self.iter_rev_rows())
+            case 3 | -1:
+                return FrozenGrid.from_iter(self.iter_cols())
+
+        raise TypeError(f"Invalid turns: {turns}")
+
+    def in_bounds(self, p: Point) -> bool:
+        return 0 <= p.x < self.col_len() and 0 <= p.y < self.row_len()
+
+
 __all__ = [
     "collect_lines",
     "collect_block_lines",
     "collect_block_statements",
     "Point",
+    "FrozenGrid",
 ]
