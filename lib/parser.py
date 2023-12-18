@@ -186,7 +186,7 @@ def _point_operation(
 @dataclass(frozen=True)
 class FrozenGrid[T](Sequence[Sequence[T]]):
     type Array = tuple[T, ...]
-    _grid: tuple[tuple[T, ...], ...]
+    _grid: tuple[Array, ...]
 
     def iter_rows(self) -> Iterator[Array]:
         yield from self._grid
@@ -255,9 +255,9 @@ class FrozenGrid[T](Sequence[Sequence[T]]):
             case 1 | -3:
                 return FrozenGrid.from_iter(self.iter_rev_cols())
             case 2 | -2:
-                return FrozenGrid.from_iter(self.iter_rev_rows())
+                return FrozenGrid.from_iter(reversed(row) for row in reversed(self))
             case 3 | -1:
-                return FrozenGrid.from_iter(self.iter_cols())
+                return FrozenGrid.from_iter(zip(*reversed(self._grid)))
 
         raise TypeError(f"Invalid turns: {turns}")
 
