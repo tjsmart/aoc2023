@@ -3,6 +3,8 @@ from collections import deque
 from typing import NamedTuple
 
 from lib import FrozenGrid
+from lib import Inf
+from lib import InfType
 from lib import Point
 
 
@@ -11,10 +13,6 @@ class Node(NamedTuple):
     dir: Point
     slc: int
     hls: int
-
-
-# TODO: implement an int 'inf'
-LARGE_NUMBER = 10000000000000000000000000
 
 
 def solution(s: str) -> int:
@@ -26,12 +24,15 @@ def solution(s: str) -> int:
             Node(Point(0, 1), Point(0, 1), 1, 0),
         ]
     )
-    visited: dict[tuple[Point, Point, int], int] = defaultdict(lambda: LARGE_NUMBER)
-    min_hls = LARGE_NUMBER
+    visited: dict[tuple[Point, Point, int], int | InfType] = defaultdict(InfType)
+    min_hls = Inf
     while queue:
         node = queue.popleft()
 
         if visited[(node.loc, node.dir, node.slc)] < node.hls:
+            continue
+
+        if node.hls >= min_hls:
             continue
 
         hls_at_loc = grid[node.loc.y][node.loc.x]
@@ -49,6 +50,8 @@ def solution(s: str) -> int:
 
             visited[(c.loc, c.dir, c.slc)] = c.hls
             queue.append(c)
+
+    assert not isinstance(min_hls, InfType)
 
     return min_hls + grid[-1][-1]
 
