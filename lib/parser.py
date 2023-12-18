@@ -169,7 +169,7 @@ def _point_operation(
     y: int
     try:
         x, y = other  # type: ignore
-    except TypeError:
+    except (ValueError, TypeError):
         x, y = other, other # type: ignore
 
     try:
@@ -186,7 +186,7 @@ def _point_operation(
 @dataclass(frozen=True)
 class FrozenGrid[T](Sequence[Sequence[T]]):
     type Array = tuple[T, ...]
-    _grid: tuple[tuple[T]]
+    _grid: tuple[tuple[T, ...], ...]
 
     def iter_rows(self) -> Iterator[Array]:
         yield from self._grid
@@ -198,7 +198,7 @@ class FrozenGrid[T](Sequence[Sequence[T]]):
         yield from zip(*self._grid)
 
     def iter_rev_cols(self) -> Iterator[Array]:
-        yield from zip(*reversed(self._grid))
+        yield from reversed(tuple(zip(*self._grid)))
 
     def enum_rows(self) -> Iterator[tuple[int, Array]]:
         yield from enumerate(self.iter_rows())
@@ -260,6 +260,12 @@ class FrozenGrid[T](Sequence[Sequence[T]]):
                 return FrozenGrid.from_iter(self.iter_cols())
 
         raise TypeError(f"Invalid turns: {turns}")
+
+    def hreflect(self) -> FrozenGrid:
+        return FrozenGrid.from_iter(reversed(row) for row in self._grid)
+
+    def vreflect(self) -> FrozenGrid:
+        return FrozenGrid.from_iter(self.iter_rev_rows())
 
     def in_bounds(self, p: Point) -> bool:
         return 0 <= p.x < self.col_len() and 0 <= p.y < self.row_len()
