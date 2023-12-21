@@ -270,6 +270,13 @@ class FrozenGrid[T](Sequence[Sequence[T]]):
     def in_bounds(self, p: Point) -> bool:
         return 0 <= p.x < self.col_len() and 0 <= p.y < self.row_len()
 
+    def find(self, t: T, /) -> Point:
+        for y, row in self.enum_rows():
+            for x, c in enumerate(row):
+                if c == t:
+                    return Point(x, y)
+        raise ValueError(f"value {t!r} not located in grid")
+
 
 __all__ = [
     "collect_lines",
