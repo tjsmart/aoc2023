@@ -200,11 +200,17 @@ class FrozenGrid[T](Sequence[Sequence[T]]):
     def iter_rev_cols(self) -> Iterator[Array]:
         yield from reversed(tuple(zip(*self._grid)))
 
+    def iter_values(self) -> Iterator[T]:
+        return (c for row in self for c in row)
+
     def enum_rows(self) -> Iterator[tuple[int, Array]]:
         yield from enumerate(self.iter_rows())
 
     def enum_cols(self) -> Iterator[tuple[int, Array]]:
         yield from enumerate(self.iter_cols())
+
+    def enum_values(self) -> Iterator[tuple[Point, T]]:
+        return ((Point(x, y), self[y][x]) for y in range(self.row_len()) for x in range(self.col_len()))
 
     def row_len(self) -> int:
         return len(self)
@@ -212,8 +218,23 @@ class FrozenGrid[T](Sequence[Sequence[T]]):
     def col_len(self) -> int:
         return len(self[0])
 
+
+    @overload
     def __getitem__(self, __key: SupportsIndex) -> Array:
-        return self._grid[__key]
+        ...
+
+    @overload
+    def __getitem__(self, __key: tuple[int, int]) -> T:
+        ...
+
+    def __getitem__(self, __key: SupportsIndex | tuple[int, int]) -> Array | T:
+        try:
+            k = operator.index(__key) # type: ignore
+        except TypeError:
+            x, y = __key  # type: ignore
+            return self[y][x]
+        else:
+            return self._grid[k]
 
     def __len__(self) -> int:
         return len(self._grid)
@@ -269,6 +290,14 @@ class FrozenGrid[T](Sequence[Sequence[T]]):
 
     def in_bounds(self, p: Point) -> bool:
         return 0 <= p.x < self.col_len() and 0 <= p.y < self.row_len()
+
+    def on_edge(self, p: Point) -> bool:
+        return (
+            p.y <= 0
+            or p.x <= 0
+            or p.y >= self.row_len() - 1
+            or p.x >= self.col_len() - 1
+        )
 
     def find(self, t: T, /) -> Point:
         for y, row in self.enum_rows():
