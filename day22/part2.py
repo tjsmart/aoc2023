@@ -53,6 +53,8 @@ def solution(s: str) -> int:
     bricks.sort(key=lambda b: b.head.z)
 
     important: set[int] = set()
+    supports: dict[int, set[int]] = defaultdict(set)
+    supported_by: dict[int, set[int]] = defaultdict(set)
     topography: dict[Vec2, tuple[int, int | None]] = defaultdict(lambda: (0, None))
     for bid, b in enumerate(bricks):
         z_to_bids: dict[int, set[int]] = defaultdict(set)
@@ -63,13 +65,36 @@ def solution(s: str) -> int:
 
         max_z = max(z_to_bids or [0])
         max_z_bids = z_to_bids[max_z]
+
+        supported_by[bid] = max_z_bids
+        for max_z_bid in max_z_bids:
+            supports[max_z_bid].add(bid)
+
         if len(max_z_bids) == 1:
-            important |= max_z_bids
+            (max_z_bid,) = max_z_bids
+            important.add(max_z_bid)
 
         for xy in b.iter_xy():
             topography[xy] = (max_z + b.height(), bid)
 
-    return len(bricks) - len(important)
+    return sum(map(lambda bid: compute(bid, supports, supported_by), important))
+
+
+def compute(
+    sbid: int, supports: dict[int, set[int]], supported_by: dict[int, set[int]]
+) -> int:
+    dropped = set()
+    queue = {sbid}
+    while queue:
+        dropped |= queue
+
+        check = set()
+        for bid in queue:
+            check |= supports[bid]
+
+        queue = {bid for bid in check if supported_by[bid] <= dropped}
+
+    return len(dropped) - 1
 
 
 class Test:
@@ -84,80 +109,12 @@ class Test:
 0,1,6~2,1,6
 1,1,8~1,1,9
 """
-    EXPECTED_RESULT = 5
+    EXPECTED_RESULT = 7
 
     @pytest.mark.parametrize(
         ("case", "expected"),
         [
             (EXAMPLE_INPUT, EXPECTED_RESULT),
-            ("0,0,0~0,0,0\n0,0,2~0,0,2", 1),
-            ("0,0,0~3,0,0\n0,0,2~0,0,2", 1),
-            ("0,0,0~0,3,0\n0,0,2~0,0,2", 1),
-            ("0,0,0~0,0,3\n0,0,7~0,0,7", 1),
-            ("0,0,0~0,0,0\n1,0,2~2,0,2", 2),
-            ("0,0,0~0,0,0\n0,1,2~0,2,2", 2),
-            ("0,0,0~0,0,0\n-2,0,2~-1,0,2", 2),
-            ("0,0,0~0,0,0\n0,-2,2~0,-1,2", 2),
-            ("0,0,0~0,0,0\n0,1,2~0,1,4", 2),
-            (
-                """\
-0,0,1~0,1,1
-1,1,1~1,1,1
-0,0,2~0,0,2
-0,1,2~1,1,2
-""",
-                3,
-            ),
-            (
-                """\
-0,0,1~1,0,1
-0,1,1~0,1,2
-0,0,4~0,1,4
-0,0,5~0,0,5
-""",
-                2,
-            ),
-            # D
-            # C
-            # B
-            # XA
-            # D
-            # CC
-            #  B
-            # AB
-            (
-                """\
-0,0,1~0,0,2
-1,0,1~2,0,1
-1,0,2~1,0,2
-0,0,3~1,0,3
-""",
-                3,
-            ),
-            (
-                """\
-1,1,1~5,1,1
-1,1,2~1,5,2
-""",
-                1,
-            ),
-            (
-                """\
-0,0,2~0,0,4
-1,0,3~2,0,3
-1,0,4~1,0,5
-0,0,6~1,0,6
-""",
-                3,
-            ),
-            (
-                """\
-0,0,1~0,0,4
-0,0,7~0,0,8
-0,0,10~0,0,10
-""",
-                1,
-            ),
         ],
     )
     def test_examples(self, case, expected):
