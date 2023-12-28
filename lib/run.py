@@ -44,6 +44,10 @@ def run_selections(selections: list[DayPart], *, count: int = 1) -> int:
         solution = dp.load_solution()
         print(f"{dp.emoji} ({dp.day:02}/{dp.part}) ➡️ ", end="")
 
+        if not dp.is_solved() and len(selections) > 1:
+            print(f"{Color.YellowText.format("problem is unsolved")} 🤔")
+            continue
+
         total_time = 0
         result = None
         for _ in range(count):
@@ -61,7 +65,7 @@ def run_selections(selections: list[DayPart], *, count: int = 1) -> int:
             case Cancelled(duration):
                 dstr = _format_duration(duration)
                 print(f"{Color.YellowText.format(f"solution cancelled after {dstr}")} 🛑")
-                rtc |= 1
+                return 1
 
             case Finished(None, _):
                 print(f"{Color.YellowText.format("no answer provided?!")} 👻")
