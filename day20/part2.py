@@ -1,3 +1,4 @@
+from collections import defaultdict
 from collections import deque
 from dataclasses import dataclass
 from dataclasses import field
@@ -42,25 +43,39 @@ type PulseCount = dict[bool, int]
 def solution(s: str) -> int:
     modules = collect_lines(s, parse, container=dict)
     populate_conjuction_memory(modules)
-    pulse_counts: list[PulseCount] = []
 
-    for _ in range(1000):
-        pulse_counts.append(push_button(modules))
+    # TODO: make this less specific to my input...
+    targets = [
+        n
+        for n, m in modules.items()
+        if isinstance(m, ConjuctionModule) and "vr" in m.destinations
+    ]
 
-    return sum(pc[False] for pc in pulse_counts) * sum(pc[True] for pc in pulse_counts)
+    total = 1
+    i = 0
+    while targets:
+        cm_pulses = do_the_good_stuff(modules)
+        i += 1
+
+        for n in reversed(targets):
+            if cm_pulses[n][False]:
+                total *= i
+                targets.remove(n)
+
+    return total
 
 
-def push_button(modules: dict[str, Module]) -> PulseCount:
+def do_the_good_stuff(modules: dict[str, Module]) -> dict[str, dict[bool, int]]:
     broadcaster = modules["broadcaster"]
     queue: deque[Signal] = deque(
         Signal("broadcaster", d, False) for d in broadcaster.destinations
     )
-    pulse_count = {False: 1, True: 0}
+    cm_pulses: dict[str, dict[bool, int]] = defaultdict(lambda: defaultdict(int))
+
     while queue:
         src, dest, state = queue.popleft()
-        pulse_count[state] += 1
-
         m = modules.get(dest)
+
         match m:
             case None:
                 continue
@@ -72,6 +87,8 @@ def push_button(modules: dict[str, Module]) -> PulseCount:
                         queue.append(Signal(m.name, d, m.state))
 
             case ConjuctionModule():
+                cm_pulses[m.name][state] += 1
+
                 m.memory[src] = state
                 output = not all(m.memory.values())
                 for d in m.destinations:
@@ -80,7 +97,7 @@ def push_button(modules: dict[str, Module]) -> PulseCount:
             case _:
                 raise TypeError(f"Unexpected module type: {type(m).__name__!r}")
 
-    return pulse_count
+    return cm_pulses
 
 
 def get_system_state(modules: dict[str, Module]) -> dict[str, bool]:
@@ -114,35 +131,3 @@ def parse(s: str) -> tuple[str, Module]:
             return (m_s, ConjuctionModule(m_s, destinations))
         case _:
             raise ValueError(f"Invalid module string: {s}")
-
-
-class Test:
-    import pytest
-
-    @pytest.mark.parametrize(
-        ("case", "expected"),
-        [
-            (
-                """\
-broadcaster -> a, b, c
-%a -> b
-%b -> c
-%c -> inv
-&inv -> a
-""",
-                32000000,
-            ),
-            (
-                """\
-broadcaster -> a
-%a -> inv, con
-&inv -> b
-%b -> con
-&con -> output
-""",
-                11687500,
-            ),
-        ],
-    )
-    def test_examples(self, case, expected):
-        assert solution(case) == expected
