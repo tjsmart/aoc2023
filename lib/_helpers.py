@@ -98,7 +98,7 @@ class DayPart(NamedTuple):
 
     @property
     def emoji(self) -> str:
-        return _EMOJI_LIST[self.day]
+        return _EMOJI_LIST[self.day - 1]
 
     def is_solved(self) -> bool:
         return self.solutionfile.exists() and not os.access(self.solutionfile, os.W_OK)
