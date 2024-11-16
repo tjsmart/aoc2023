@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import statistics
 from dataclasses import dataclass
-from typing import final
 from typing import NamedTuple
 
 import numpy.linalg
@@ -10,7 +9,6 @@ import numpy.linalg
 from lib import collect_lines
 
 
-@final
 class Vec3(NamedTuple):
     x: int
     y: int
@@ -41,7 +39,6 @@ class Vec3(NamedTuple):
         return Vec3(self.x // v, self.y // v, self.z // v)
 
 
-@final
 @dataclass(frozen=True)
 class Projectile:
     p0: Vec3

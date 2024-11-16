@@ -1,3 +1,14 @@
+"""
+More robust solution is possible, but who has the time?
+Thought:
+    perform complete grid walk in a 3x3 universe, saving off the points visited on each step per square:
+        {
+            (0,0): [{(5, 5)}, {(4, 5), (5, 4)} ...]   # points in middle square
+            (1,0): [{}, {}, ..., {(0, 5)}, {(0, 6), (1, 5)} ...]   # points in right square
+            ... # so on for the other 7 squares
+        }
+    use this to project larger steps
+"""
 import math
 from collections.abc import Iterator
 
