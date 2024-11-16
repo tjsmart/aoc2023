@@ -54,10 +54,29 @@ def submit_daypart(dp: DayPart) -> int:
 
     dp.mark_solved()
     _update_calendar(year)
+
+    if dp.day == 25:
+        return submit_day25_part2()
+
     if dp.part == 1:
         # time for the next part!
         return next.main([])
 
+    return 0
+
+
+def submit_day25_part2() -> int:
+    """
+    Day 25 part2 isn't a new puzzle, just need
+    to push the big red button and get-r-done.
+    """
+    year = get_year()
+    dp = DayPart(25, 2)
+    if rtc := submit_solution(year, dp, "0"):
+        return rtc
+
+    dp.mark_solved()
+    _update_calendar(year)
     return 0
 
 
